@@ -1,12 +1,12 @@
 //
-//  CFStreamConnection.m
+//  CFSocketConnection.m
 //  
 //
 //  Created by Чайка on 7/7/12.
 //  Copyright (c) 2012 iom. All rights reserved.
 //
 
-#import "CFStreamConnection.h"
+#import "CFSocketConnection.h"
 
 @interface CFStreamConnection (private)
 

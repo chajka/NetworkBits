@@ -1,5 +1,5 @@
 //
-//  CFStreamConnection.h
+//  CFSocketConnection.h
 //  
 //
 //  Created by Чайка on 7/7/12.
