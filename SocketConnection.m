@@ -85,8 +85,8 @@
 		return;
 
 #if __has_feature(objc_arc)
-	__strong NSInputStream *_iStream = nil;	
-	__strong NSOutputStream *_oStream = nil;
+	NSInputStream *_iStream = nil;	
+	NSOutputStream *_oStream = nil;
 #endif
 	
 	NSHost *host = [NSHost hostWithName:server];

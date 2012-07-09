@@ -99,8 +99,8 @@ typedef NSInteger SCDirection;
 #endif
 	id <StreamEventDelegate>	streamEventDelegate;
 		// data stream
-	NSInputStream		*iStream;
-	NSOutputStream		*oStream;
+	__strong NSInputStream		*iStream;
+	__strong NSOutputStream		*oStream;
 	SCDirection					direction;
 		// hold server information
 	NSString					*server;
