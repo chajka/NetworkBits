@@ -42,4 +42,9 @@
 @property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
 
+- (void) connect;
+- (void) disconnect;
+- (void) disconnectOnlyInput;
+- (void) disconnectOnlyOutput;
+
 @end

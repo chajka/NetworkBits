@@ -58,6 +58,10 @@ static BOOL haveOStreamEventNone = NO;
 
 - (void) dealloc
 {
+	if (readStream != NULL)
+		[self disconnectOnlyInput];
+	if (writeStream != NULL)
+		[self disconnectOnlyInput];
 #if __has_feature(objc_arc) == 0
 	if ((inputDelegator != self) || (inputDelegator != nil))
 		[inputDelegator release];
@@ -71,11 +75,22 @@ static BOOL haveOStreamEventNone = NO;
 #endif
 }
 
+#if __OBJC_GC__
+- (void) finalize
+{
+	if (readStream != NULL)
+		[self disconnectOnlyInput];
+	if (writeStream != NULL)
+		[self disconnectOnlyInput];
+	[super finalize];
+}
+#endif
+
 #pragma mark -
 #pragma mark action
 - (void) connect
 {
-	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge_transfer CFStringRef)serverName);
+	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)serverName);
 	do_connect(host, portNumber);
 	CFRelease(host);
 }// end - (void) connect
@@ -286,8 +301,7 @@ setup_read_stream(CFReadStreamRef readStream)
 	
 	CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
     CFStreamClientContext context = { 0, NULL, NULL, NULL, NULL };
-    if (!CFReadStreamSetClient(readStream, streamEvents,
-                               read_stream_callback, &context))
+    if (!CFReadStreamSetClient(readStream, streamEvents, read_stream_callback, &context))
 	{		// check error
         err = CFReadStreamGetError(readStream);
         return err;
@@ -331,8 +345,7 @@ setup_write_stream(CFWriteStreamRef writeStream)
 	CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
 	CFStreamClientContext context = { 0, NULL, NULL, NULL, NULL };
 	
-    if (!CFWriteStreamSetClient(writeStream, streamEvents,
-                                write_stream_callback, &context))
+    if (!CFWriteStreamSetClient(writeStream, streamEvents, write_stream_callback, &context))
 	{
         err = CFWriteStreamGetError(writeStream);
         return err;
@@ -358,22 +371,22 @@ read_stream_callback(CFReadStreamRef iStream, CFStreamEventType eventType, void*
 {
     switch (eventType) {
         case kCFStreamEventOpenCompleted:
-			[iDelegator iStreamOpenCompleted:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamOpenCompleted:(__bridge_transfer NSInputStream *)iStream];
             break;
         case kCFStreamEventHasBytesAvailable:
-			[iDelegator iStreamHasBytesAvailable:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamHasBytesAvailable:(__bridge_transfer NSInputStream *)iStream];
             break;
         case kCFStreamEventEndEncountered:
-			[iDelegator iStreamEndEncounted:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamEndEncounted:(__bridge_transfer NSInputStream *)iStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[iDelegator iStreamErrorOccured:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamErrorOccured:(__bridge_transfer NSInputStream *)iStream];
             break;
 		case kCFStreamEventCanAcceptBytes:
-			[iDelegator iStreamCanAcceptBytes:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamCanAcceptBytes:(__bridge_transfer NSInputStream *)iStream];
 			break;
 		case kCFStreamEventNone:
-			[iDelegator iStreamHasBytesAvailable:(__bridge NSInputStream *)iStream];
+			[iDelegator iStreamHasBytesAvailable:(__bridge_transfer NSInputStream *)iStream];
 		default:
 			break;
     }
@@ -384,22 +397,22 @@ write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, voi
 {
     switch (eventType) {
         case kCFStreamEventOpenCompleted:
-			[oDelegator oStreamOpenCompleted:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamOpenCompleted:(__bridge_transfer NSOutputStream *)oStream];
             break;
         case kCFStreamEventHasBytesAvailable:
-			[oDelegator oStreamHasBytesAvailable:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamHasBytesAvailable:(__bridge_transfer NSOutputStream *)oStream];
             break;
         case kCFStreamEventEndEncountered:
-			[oDelegator oStreamEndEncounted:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamEndEncounted:(__bridge_transfer NSOutputStream *)oStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[oDelegator oStreamErrorOccured:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamErrorOccured:(__bridge_transfer NSOutputStream *)oStream];
             break;
 		case kCFStreamEventCanAcceptBytes:
-			[oDelegator oStreamCanAcceptBytes:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamCanAcceptBytes:(__bridge_transfer NSOutputStream *)oStream];
 			break;
 		case kCFStreamEventNone:
-			[oDelegator oStreamHasBytesAvailable:(__bridge NSOutputStream *)oStream];
+			[oDelegator oStreamHasBytesAvailable:(__bridge_transfer NSOutputStream *)oStream];
 		default:
 			break;
     }
