@@ -20,6 +20,7 @@
 @end
 
 @protocol OutputStreamConnectionDelegate <NSObject>
+@required
 - (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream;
 - (void) oStreamEndEncounted:(NSOutputStream *)oStream;
 - (void) oStreamErrorOccured:(NSOutputStream *)oStream;
@@ -29,7 +30,7 @@
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
-@interface CFStreamConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
+@interface CFSocketConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
 		// connection specific variables
 	NSString *serverName;
 	NSUInteger portNumber;
@@ -42,9 +43,11 @@
 @property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
 
-- (void) connect;
+- (id) initWithServerName:(NSString *)server andPort:(NSUInteger)port;
+
+- (BOOL) connect;
 - (void) disconnect;
-- (void) disconnectOnlyInput;
-- (void) disconnectOnlyOutput;
+- (void) closeReadStream;
+- (void) closeWriteStream;
 
 @end
