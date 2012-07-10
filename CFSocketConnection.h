@@ -47,6 +47,7 @@
 
 - (BOOL) connect;
 - (void) disconnect;
+- (BOOL) readyToConnect;
 - (void) closeReadStream;
 - (void) closeWriteStream;
 

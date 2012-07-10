@@ -14,7 +14,9 @@ static CFStreamError do_connect(CFHostRef host, NSUInteger port);
 static void disconnectReadStream(CFReadStreamRef iStream);
 static void disconnectWriteStream(CFWriteStreamRef oStream);
 static CFStreamError setup_read_stream(CFReadStreamRef readStream);
+static CFStreamError run_read_stream(CFReadStreamRef readStream);
 static CFStreamError setup_write_stream(CFWriteStreamRef writeStream);
+static CFStreamError run_write_stream(CFWriteStreamRef writeStream);
 static void read_stream_callback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info);
 static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
 @end
@@ -28,6 +30,8 @@ static id oDelegator;
 	//
 CFReadStreamRef readStream = NULL;
 CFWriteStreamRef writeStream = NULL;
+static BOOL readStreamIsSetuped = NO;
+static BOOL writeStreamIsSetuped = NO;
 	// input stream delegate flags
 static BOOL haveIStreamEventOpenCompleted = NO;
 static BOOL haveIStreamEventHasBytesAvailable = NO;
@@ -89,6 +93,20 @@ static BOOL haveOStreamEventNone = NO;
 
 #pragma mark -
 #pragma mark action
+- (BOOL) readyToConnect
+{
+	CFStreamError readErr;
+	CFStreamError writeErr;
+	readErr = setup_read_stream(readStream);
+	if (readErr.error == 0)
+		readStreamIsSetuped = YES;
+	writeErr = setup_write_stream(writeStream);
+	if (writeErr.error == 0)
+		writeStreamIsSetuped = YES;
+
+	return (readStreamIsSetuped & writeStreamIsSetuped) ? YES : NO;
+}// end - (BOOL) readyToConnect
+
 - (BOOL) connect
 {
 	CFStreamError err;
@@ -105,12 +123,21 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectReadStream(readStream);
 		readStream = NULL;
+#if __has_feature(objc_arc) == 0
+		if (inputDelegator != self)		[inputDelegator release];
+#endif
+		inputDelegator = nil;
+		
 	}// end close read stream
 
 	if (writeStream != NULL)
 	{
 		disconnectWriteStream(writeStream);
 		writeStream = NULL;
+#if __has_feature(objc_arc) == 0
+		if (outputDelegator != self)	[outputDelegator release];
+#endif
+		outputDelegator = nil;
 	}// end close write stream
 }// end - (void) disconnect
 
@@ -120,6 +147,10 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectReadStream(readStream);
 		readStream = NULL;
+#if __has_feature(objc_arc) == 0
+		if (inputDelegator != self)		[inputDelegator release];
+#endif
+		inputDelegator = nil;
 	}// end close read stream
 }// end - (void) closeReadStream
 
@@ -129,6 +160,10 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectWriteStream(writeStream);
 		writeStream = NULL;
+#if __has_feature(objc_arc) == 0
+		if (outputDelegator != self)	[outputDelegator release];
+#endif
+		outputDelegator = nil;
 	}// end close write stream
 }// end - (void) closeWriteStream
 
@@ -256,7 +291,8 @@ do_connect(CFHostRef host, NSUInteger port)
     CFStreamCreatePairWithSocketToCFHost(kCFAllocatorDefault, host, port, &readStream, &writeStream);
 
 		// setup read stream
-    err = setup_read_stream(readStream);
+	err = setup_read_stream(readStream);
+    err = run_read_stream(readStream);
     if (err.error != 0)
 	{
         CFRelease(readStream);
@@ -265,6 +301,7 @@ do_connect(CFHostRef host, NSUInteger port)
 
 		// setup write stream
 	err = setup_write_stream(writeStream);
+	err = run_write_stream(writeStream);
     if (err.error != 0) {
         CFRelease(writeStream);
         writeStream = NULL;
@@ -278,6 +315,7 @@ disconnectReadStream(CFReadStreamRef iStream)
 {
 	CFReadStreamUnscheduleFromRunLoop(iStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 	CFReadStreamClose(iStream);
+	CFRelease(iStream);
 }// end disconnectReadStream
 
 static void
@@ -285,6 +323,7 @@ disconnectWriteStream(CFWriteStreamRef oStream)
 {
 	CFWriteStreamUnscheduleFromRunLoop(oStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 	CFWriteStreamClose(oStream);
+	CFRelease(oStream);
 }// end disconnectReadStream
 
 static CFStreamError
@@ -319,6 +358,16 @@ setup_read_stream(CFReadStreamRef readStream)
         return err;
     }// end if set callback and context failed
 
+	return err;
+}// end static CFStreamError setup_read_stream(CFReadStreamRef readStream)
+
+static CFStreamError
+run_read_stream(CFReadStreamRef readStream)
+{
+	CFStreamError err;
+	err.domain = kCFStreamErrorDomainMacOSStatus;
+	err.error = noErr;
+	
 		// append read stream to runloop
     CFReadStreamScheduleWithRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 		// check can open read stream
@@ -365,6 +414,16 @@ setup_write_stream(CFWriteStreamRef writeStream)
         err = CFWriteStreamGetError(writeStream);
         return err;
     }// end if set callback and context failed
+
+	return err;
+}// end static CFStreamError setup_read_stream(CFReadStreamRef readStream)
+
+static CFStreamError
+run_write_stream(CFWriteStreamRef writeStream)
+{
+	CFStreamError err;
+	err.domain = kCFStreamErrorDomainMacOSStatus;
+	err.error = noErr;
 
 		// append write stream to runloop
     CFWriteStreamScheduleWithRunLoop(writeStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
