@@ -290,22 +290,36 @@ do_connect(CFHostRef host, NSUInteger port)
 		// allocate target host/port’s read & write stream
     CFStreamCreatePairWithSocketToCFHost(kCFAllocatorDefault, host, port, &readStream, &writeStream);
 
-		// setup read stream
+		// setup & check stream
 	err = setup_read_stream(readStream);
+	if (err.error != noErr)
+	{
+		CFRelease(readStream);		readStream = NULL;
+		CFRelease(writeStream);		writeStream = NULL;
+		return err;
+	}// end if readstream setup error
+	err = setup_write_stream(writeStream);
+	if (err.error != noErr)
+	{
+		CFRelease(readStream);		readStream = NULL;
+		CFRelease(writeStream);		writeStream = NULL;
+		return err;
+	}// end if writestream setup error
+
     err = run_read_stream(readStream);
     if (err.error != 0)
 	{
-        CFRelease(readStream);
-        readStream = NULL;
-    }// end if read stream setup error
-
+		CFRelease(readStream);		readStream = NULL;
+		CFRelease(writeStream);		writeStream = NULL;
+        return err;
+    }// end if read stream run error
 		// setup write stream
-	err = setup_write_stream(writeStream);
 	err = run_write_stream(writeStream);
     if (err.error != 0) {
-        CFRelease(writeStream);
-        writeStream = NULL;
-    }// end if write stream setup error
+		CFRelease(readStream);		readStream = NULL;
+		CFRelease(writeStream);		writeStream = NULL;
+        return err;
+    }// end if write stream run error
 
 	return err;
 }// end static void do_connect(CFHostRef host)
