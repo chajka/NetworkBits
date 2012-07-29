@@ -10,7 +10,7 @@
 #import <CoreFoundation/CoreFoundation.h>
 
 @interface CFSocketConnection (private)
-static CFStreamError do_connect(CFHostRef host, NSUInteger port);
+static CFStreamError do_connect(CFHostRef host, int port);
 static void disconnectReadStream(CFReadStreamRef iStream);
 static void disconnectWriteStream(CFWriteStreamRef oStream);
 static CFStreamError setup_read_stream(CFReadStreamRef readStream);
@@ -47,7 +47,7 @@ static BOOL haveOStreamEventErrorOccurred = NO;
 static BOOL haveOStreamEventEndEncountered = NO;
 static BOOL haveOStreamEventNone = NO;
 #pragma mark construct / destruct
-- (id) initWithServerName:(NSString *)server andPort:(NSUInteger)port
+- (id) initWithServerName:(NSString *)server andPort:(int)port
 {
 	self = [super init];
 	if (self)
@@ -283,7 +283,7 @@ static BOOL haveOStreamEventNone = NO;
 #pragma mark callback for input stream
 
 static CFStreamError
-do_connect(CFHostRef host, NSUInteger port)
+do_connect(CFHostRef host, int port)
 {
 	CFStreamError err;
     

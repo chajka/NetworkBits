@@ -33,17 +33,17 @@
 @interface CFSocketConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
 		// connection specific variables
 	NSString *serverName;
-	NSUInteger portNumber;
+	int portNumber;
 		// process stream specific variables
 	__strong id <InputStreamConnectionDelegate> inputDelegator;
 	__strong id <OutputStreamConnectionDelegate> outputDelegator;
 }
 @property (readonly) NSString *serverName;
-@property (readonly) NSUInteger portNumber;
+@property (readonly) int portNumber;
 @property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
 
-- (id) initWithServerName:(NSString *)server andPort:(NSUInteger)port;
+- (id) initWithServerName:(NSString *)server andPort:(int)port;
 
 - (BOOL) connect;
 - (void) disconnect;
