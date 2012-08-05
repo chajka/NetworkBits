@@ -14,7 +14,7 @@
 	//	for creating query literal
 #define ParamConcatFormat	@"%@=%@"
 #define ParamsConcatSymbol	@"&"
-#define QueryConcatFormat	@"?%@"
+#define QueryConcatSymbol	@"?"
 
 const NSTimeInterval defaultTimeout = 30; // second
 
@@ -180,8 +180,8 @@ const NSTimeInterval defaultTimeout = 30; // second
 	NSURL *queryURL = nil;
 	NSString *query = nil;
 	if (params != nil)
-		query = [NSString stringWithFormat:QueryConcatFormat, [self buildParam]];
-	queryURL = [NSURL URLWithString:[NSString stringWithFormat:QueryConcatFormat, [url absoluteString], query]];
+		query = [self buildParam];
+	queryURL = [NSURL URLWithString:[[url absoluteString] stringByAppendingString:query]];
 	NSURLResponse *resp = nil;
 	NSString *string = nil;
 	string = [HTTPConnection HTTPSource:queryURL response:&resp];
@@ -195,8 +195,8 @@ const NSTimeInterval defaultTimeout = 30; // second
 	NSURL *queryURL = nil;
 	NSString *query = nil;
 	if (params != nil)
-		query = [NSString stringWithFormat:QueryConcatFormat, [self buildParam]];
-	queryURL = [NSURL URLWithString:[NSString stringWithFormat:QueryConcatFormat, [url absoluteString], query]];
+		query = [self buildParam];
+	queryURL = [NSURL URLWithString:[[url absoluteString] stringByAppendingString:query]];
 	NSURLResponse *resp;
 	NSData *data = [HTTPConnection HTTPData:queryURL response:&resp];
 	response = [resp copy];
@@ -309,7 +309,9 @@ const NSTimeInterval defaultTimeout = 30; // second
 	{
 		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, key, [params objectForKey:key]]];
 	}// end for
-	param = [[messages componentsJoinedByString:ParamsConcatSymbol] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	param = [QueryConcatSymbol stringByAppendingString:
+			 [[messages componentsJoinedByString:ParamsConcatSymbol]
+			  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
 
 	return param;
 }// end - (NSString *) buildParam
