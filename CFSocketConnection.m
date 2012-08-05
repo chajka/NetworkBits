@@ -67,7 +67,7 @@ static BOOL haveOStreamEventNone = NO;
 		[self closeReadStream];
 	if (writeStream != NULL)
 		[self closeWriteStream];
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	if ((inputDelegator != self) || (inputDelegator != nil))
 		[inputDelegator release];
 	if ((outputDelegator != self) || (inputDelegator != nil))
@@ -75,7 +75,7 @@ static BOOL haveOStreamEventNone = NO;
 #endif
 	inputDelegator = nil;
 	outputDelegator = nil;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[super dealloc];
 #endif
 }
@@ -123,7 +123,7 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectReadStream(readStream);
 		readStream = NULL;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 		if (inputDelegator != self)		[inputDelegator release];
 #endif
 		inputDelegator = nil;
@@ -134,7 +134,7 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectWriteStream(writeStream);
 		writeStream = NULL;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 		if (outputDelegator != self)	[outputDelegator release];
 #endif
 		outputDelegator = nil;
@@ -147,7 +147,7 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectReadStream(readStream);
 		readStream = NULL;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 		if (inputDelegator != self)		[inputDelegator release];
 #endif
 		inputDelegator = nil;
@@ -160,7 +160,7 @@ static BOOL haveOStreamEventNone = NO;
 	{
 		disconnectWriteStream(writeStream);
 		writeStream = NULL;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 		if (outputDelegator != self)	[outputDelegator release];
 #endif
 		outputDelegator = nil;
@@ -179,7 +179,7 @@ static BOOL haveOStreamEventNone = NO;
 {		// set delegate
 	inputDelegator = delegate;
 	iDelegator = inputDelegator;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[inputDelegator retain];
 #endif
 		// check have method
@@ -207,7 +207,7 @@ static BOOL haveOStreamEventNone = NO;
 {		// set delegate
 	outputDelegator = delegate;
 	oDelegator = outputDelegator;
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[outputDelegator retain];
 #endif
 		// check have method
