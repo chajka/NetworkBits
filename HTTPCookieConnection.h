@@ -26,18 +26,19 @@
 #else
 + (NSString *) HTTPSource:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse **)resp;
 #endif
+
 /*!
-	@method HTTPDataWithRequest:response:
+	@method HTTPData:response:
 	@abstract Return contents of requested URL by NSData.
-	@param NSURLRequest object.
+	@param URL of request.
 	@param cookie for server
 	@param resoponse from server.
 	@result html data by binary format.
 */
 #if __has_feature(objc_arc)
-+ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp;
++ (NSData *) HTTPData:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse * __autoreleasing *)resp;
 #else
-+ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp;
++ (NSData *) HTTPData:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse **)resp;
 #endif
 
 @end

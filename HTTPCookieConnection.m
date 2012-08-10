@@ -53,19 +53,21 @@
 }// end + (NSString *) HTTPSource:(NSURL *)url
 
 #if __has_feature(objc_arc)
-+ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp;
++ (NSData *) HTTPData:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse * __autoreleasing *)resp;
 #else
-+ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp;
++ (NSData *) HTTPData:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse **)resp;
 #endif
 {
+	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
+	[request setHTTPShouldHandleCookies:NO];
+	NSDictionary *dict = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
+	[request setAllHTTPHeaderFields:dict];
+	NSHTTPURLResponse *response = nil;
 	NSError *error = nil;
-	NSURLResponse *re;
-	NSData *receivedData = [NSURLConnection sendSynchronousRequest:req
-												 returningResponse:&re
-															 error:&error];
-	if (resp != nil)
-		*resp = re;
-	// endif
+	
+		// check have data
+	NSData *receivedData = [NSURLConnection sendSynchronousRequest:request
+												 returningResponse:&response error:&error];
 	
 		// error check
 	if ([error code] != noErr)
