@@ -8,6 +8,36 @@
 
 #import "HTTPConnection.h"
 
-@interface HTTPCookieConnection : HTTPConnection
+@interface HTTPCookieConnection : HTTPConnection {
+@protected
+	NSMutableArray *cookies;
+}
+	// class method
+/*!
+	@method HTTPData:response:
+	@abstract Return contents of requested URL by NSData.
+	@param URL of request.
+	@param resoponse from server.
+	@param cookie for server
+	@result html data by binary format.
+*/
+#if __has_feature(objc_arc)
++ (NSString *) HTTPSource:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse * __autoreleasing *)resp;
+#else
++ (NSString *) HTTPSource:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse **)resp;
+#endif
+/*!
+	@method HTTPDataWithRequest:response:
+	@abstract Return contents of requested URL by NSData.
+	@param NSURLRequest object.
+	@param cookie for server
+	@param resoponse from server.
+	@result html data by binary format.
+*/
+#if __has_feature(objc_arc)
++ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp;
+#else
++ (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp;
+#endif
 
 @end
