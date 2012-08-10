@@ -1,6 +1,6 @@
 //
 //  HTTPConnection.m
-//  NicoLiveAlert
+//  Network bits
 //
 //  Created by Чайка on 3/23/12.
 //  Copyright (c) 2012 iom. All rights reserved.
@@ -157,7 +157,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (void) dealloc
 {
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
     if (url != nil)		[url release];
 	if (path != nil)		[path release];
 	if (params != nil)		[params release];
@@ -169,7 +169,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 #pragma mark instance methods
 - (void) clearResponse
 {
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[response autorelease];
 #endif
 	response = nil;
@@ -263,7 +263,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 						   timeoutInterval:timeout];
 	NSURLConnection *connection;
 	connection = [[NSURLConnection alloc] initWithRequest:request delegate:target];
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[connection autorelease];
 #endif
 	
@@ -290,7 +290,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 										   returningResponse:&resp
 													   error:&error];
 	response = [resp copy];
-#if __has_feature(objc_arc) == 0
+#if ! __has_feature(objc_arc)
 	[urlRequest release];
 #endif
 	if (err != nil)
