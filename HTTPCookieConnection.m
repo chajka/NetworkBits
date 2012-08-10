@@ -1,6 +1,6 @@
 //
 //  HTTPCookieConnection.m
-//  Charleston
+//  Network bits
 //
 //  Created by Чайка on 8/10/12.
 //  Copyright (c) 2012 iom. All rights reserved.
