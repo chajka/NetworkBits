@@ -12,6 +12,7 @@
 @protected
 	NSMutableArray *cookies;
 }
+@property (copy, readwrite) NSMutableArray *cookies;
 	// class method
 /*!
 	@method HTTPData:response:
@@ -40,5 +41,30 @@
 #else
 + (NSData *) HTTPData:(NSURL *)url cookie:(NSMutableArray *)cookies response:(NSURLResponse **)resp;
 #endif
+	// constructor
+/*!
+	@method init
+	@abstract create HTTPConnection object and clear all member variable.
+	@result new clean HTTPConnection object.
+*/
+- (id) init;
 
+/*!
+	@method initWithURL:withParams:
+	@abstract create HTTPConnection object with URL and query paramerters.
+	@param URL of access this object.
+	@param query parameters by key-value pair dictionary or nil.
+	@result new HTTPConnection object with URL.
+*/
+- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param;
+
+/*!
+	@method initWithURL:withParams:
+	@abstract create HTTPConnection object with URL and query paramerters.
+	@param URL of access this object.
+	@param query parameters by key-value pair dictionary or nil.
+	@param cookies for this connection.
+	@result new HTTPConnection object with URL.
+*/
+- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookies_;
 @end
