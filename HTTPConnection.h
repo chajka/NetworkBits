@@ -10,17 +10,18 @@
 
 @interface HTTPConnection : NSObject {
 @protected
-	NSURL			*url;
-	NSString		*path;
-	NSDictionary	*params;
-	NSURLResponse	*response;
-	NSTimeInterval	timeout;
+	NSURL				*URL;
+	NSString			*path;
+	NSDictionary		*params;
+	NSURLResponse		*response;
+	NSTimeInterval		timeout;
+	NSMutableURLRequest	*request;
 }
-@property (copy, readwrite)		NSURL			*url;
-@property (copy, readwrite)		NSString		*path;
-@property (copy, readwrite)		NSDictionary	*params;
-@property (readonly)			NSURLResponse	*response;
-@property (assign, readwrite)	NSTimeInterval	timeout;
+@property (copy, readwrite)		NSURL				*URL;
+@property (copy, readwrite)		NSString			*path;
+@property (copy, readwrite)		NSDictionary		*params;
+@property (readonly)			NSURLResponse		*response;
+@property (assign, readwrite)	NSTimeInterval		timeout;
 	// class method
 /*!
 	@method HTTPSource:
@@ -56,6 +57,19 @@
 	@result html data by binary format.
 */
 #if __has_feature(objc_arc)
++ (NSString *) HTTPStringWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp;
+#else
++ (NSString *) HTTPStringWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp;
+#endif
+
+/*!
+	@method HTTPDataWithRequest:response:
+	@abstract Return contents of requested URL by NSData.
+	@param NSURLRequest object.
+	@param resoponse from server.
+	@result html data by binary format.
+*/
+#if __has_feature(objc_arc)
 + (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp;
 #else
 + (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp;
@@ -76,7 +90,7 @@
 	@param query parameters by key-value pair dictionary or nil.
 	@result new HTTPConnection object with URL. 
 */
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param;
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param;
 	// instance methods
 /*!
 	@method clearResponse
@@ -126,5 +140,16 @@
 	@param delegate object for data recieve. if nil, it dosen’t work.
 	@result NSURLConnection object of this connection;
  */
-- (NSURLConnection *) httpDataAsyncWithDelegate:(id)target;
+- (NSURLConnection *) httpDataAsyncByDelegate:(id)target;
+
+	// for HTTP connection method literal
+#define RequestMethodPost	@"POST"
+#define RequestMethodGet	@"GET"
+	//	for creating query literal
+#define ParamConcatFormat	@"%@=%@"
+#define ParamsConcatSymbol	@"&"
+#define QueryConcatSymbol	@"?"
+
+extern const NSTimeInterval defaultTimeout; // second
+
 @end

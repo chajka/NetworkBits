@@ -8,14 +8,6 @@
 
 #import "HTTPConnection.h"
 
-	// for HTTP connection method literal
-#define RequestMethodPost	@"POST"
-#define RequestMethodGet	@"GET"
-	//	for creating query literal
-#define ParamConcatFormat	@"%@=%@"
-#define ParamsConcatSymbol	@"&"
-#define QueryConcatSymbol	@"?"
-
 const NSTimeInterval defaultTimeout = 30; // second
 
 #pragma mark private methods
@@ -25,21 +17,20 @@ const NSTimeInterval defaultTimeout = 30; // second
 	@abstract clear readonly response object.
 	@discussion this method might be call after post/get method.
 	because response store last value.
-	@result new HTTPConnection object with URL. 
- */
+	@result new HTTPConnection object with URL.
+*/
 - (NSString *) buildParam;
 
 /*!
 	@method stringByPost:
 	@abstract get contents of URL by string format with posted own parameters.
 	@param error result.
-	@result new HTTPConnection object with URL. 
- */
+	@result new HTTPConnection object with URL.
+*/
 - (NSData *) post:(NSError **)err;
 @end
 
 @implementation HTTPConnection
-@synthesize url;
 @synthesize path;
 @synthesize params;
 @synthesize response;
@@ -61,7 +52,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 			  [NSNumber numberWithUnsignedInt:NSASCIIStringEncoding], nil];
 
 		// check have data
-	NSData *receivedData = [HTTPConnection HTTPData:url response:resp];
+	NSData *receivedData = [self HTTPData:url response:resp];
 	if (receivedData == nil)
 		return nil;
 
@@ -104,6 +95,40 @@ const NSTimeInterval defaultTimeout = 30; // second
 }// end + (NSString *) HTTPSource:(NSURL *)url
 
 #if __has_feature(objc_arc)
++ (NSString *) HTTPStringWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp
+#else
++ (NSString *) HTTPStringWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp
+#endif
+{
+	NSArray *encodings = [NSArray arrayWithObjects:
+						  [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],
+						  [NSNumber numberWithUnsignedInt:NSShiftJISStringEncoding],
+						  [NSNumber numberWithUnsignedInt:NSJapaneseEUCStringEncoding],
+						  [NSNumber numberWithUnsignedInt:NSISO2022JPStringEncoding],
+						  [NSNumber numberWithUnsignedInt:NSUnicodeStringEncoding],
+						  [NSNumber numberWithUnsignedInt:NSASCIIStringEncoding], nil];
+	
+		// check have data
+	NSData *receivedData = [self HTTPDataWithRequest:req response:resp];
+	if (receivedData == nil)
+		return nil;
+	
+		// datamine encoding
+	NSString *dataStr = nil;
+	for (NSNumber *enc in encodings)
+	{
+#if __has_feature(objc_arc)
+		dataStr = [[NSString alloc] initWithData:receivedData encoding:[enc unsignedIntValue]];
+#else
+		dataStr = [[[NSString alloc] initWithData:receivedData encoding:[enc unsignedIntValue]] autorelease];
+#endif
+		if (dataStr!=nil)
+			break;
+	}// end for each encodings
+	return dataStr;
+}// end + (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp
+
+#if __has_feature(objc_arc)
 + (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse * __autoreleasing *)resp
 #else
 + (NSData *) HTTPDataWithRequest:(NSURLRequest *)req response:(NSURLResponse **)resp
@@ -132,25 +157,29 @@ const NSTimeInterval defaultTimeout = 30; // second
 	self = [super init];
 	if (self)
 	{
-		url = nil;
+		URL = nil;
 		path = nil;
 		params = nil;
 		response = nil;
 		timeout = defaultTimeout;
+		request = [[NSMutableURLRequest alloc] init];
+		[request setCachePolicy:NSURLCacheStorageAllowedInMemoryOnly];
+		[request setTimeoutInterval:timeout];
 	}// end if self
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
 {
 	self = [super init];
 	if (self)
 	{
-		url = [url_ copy];
+		URL = [url copy];
 		path = nil;
 		params = [param copy];
 		response = nil;
 		timeout = defaultTimeout;
+		request = [[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:NSURLCacheStorageAllowedInMemoryOnly timeoutInterval:timeout];
 	}// end if self
 	return self;
 }// end - (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param
@@ -158,13 +187,31 @@ const NSTimeInterval defaultTimeout = 30; // second
 - (void) dealloc
 {
 #if ! __has_feature(objc_arc)
-    if (url != nil)		[url release];
+    if (URL != nil)			[URL release];
 	if (path != nil)		[path release];
 	if (params != nil)		[params release];
 	if (response != nil)	[response release];
+	if (request != nil)		[request release];
 	[super dealloc];
 #endif
 }// end - (void) dealloc
+
+#pragma mark -
+#pragma mark URL’s accessor
+- (NSURL *) URL
+{
+	return URL;
+}// end - (NSURL *) URL
+
+- (void) setURL:(NSURL *)url
+{
+#if ! __has_feature(objc_arc)
+	if (URL != nil)			[URL release];
+#endif
+	URL = [url copy];
+	[request setURL:URL];
+}// end - (void) setURL:(NSURL *)url
+
 #pragma mark -
 #pragma mark instance methods
 - (void) clearResponse
@@ -178,28 +225,36 @@ const NSTimeInterval defaultTimeout = 30; // second
 - (NSString *) stringByGet
 {
 	NSURL *queryURL = nil;
-	NSString *query = nil;
+	NSString *queryURLString = [NSString stringWithString:[URL absoluteString]];
 	if (params != nil)
-		query = [self buildParam];
-	queryURL = [NSURL URLWithString:[[url absoluteString] stringByAppendingString:query]];
+		queryURLString = [[URL absoluteString] stringByAppendingString:
+						  [QueryConcatSymbol stringByAppendingString:[self buildParam]]];
+	// end if have param
+	queryURL = [NSURL URLWithString:queryURLString];
+	[request setURL:queryURL];
+	[request setHTTPMethod:RequestMethodGet];
 	NSURLResponse *resp = nil;
-	NSString *string = nil;
-	string = [HTTPConnection HTTPSource:queryURL response:&resp];
+	NSString *dataStr = [HTTPConnection HTTPStringWithRequest:request response:&resp];
 	response = [resp copy];
-	
-	return string;
+	[request setURL:URL];
+	return dataStr;
 }// end - (NSString *) stringByGet
 
 - (NSData *) dataByGet
 {
 	NSURL *queryURL = nil;
-	NSString *query = nil;
+	NSString *queryURLString = [NSString stringWithString:[URL absoluteString]];
 	if (params != nil)
-		query = [self buildParam];
-	queryURL = [NSURL URLWithString:[[url absoluteString] stringByAppendingString:query]];
-	NSURLResponse *resp;
-	NSData *data = [HTTPConnection HTTPData:queryURL response:&resp];
+		queryURLString = [[URL absoluteString] stringByAppendingString:
+						  [QueryConcatSymbol stringByAppendingString:[self buildParam]]];
+	// end if have param
+	queryURL = [NSURL URLWithString:queryURLString];
+	[request setURL:queryURL];
+	[request setHTTPMethod:RequestMethodGet];
+	NSURLResponse *resp = nil;
+	NSData *data = [HTTPConnection HTTPDataWithRequest:request response:&resp];
 	response = [resp copy];
+	[request setURL:URL];
 	return data;
 }// end - (NSData *) dataByGet
 
@@ -252,15 +307,12 @@ const NSTimeInterval defaultTimeout = 30; // second
 	return data;
 }// end - (NSData *) dataByPost:(NSError **)error
 
-- (NSURLConnection *) httpDataAsyncWithDelegate:(id)target
+- (NSURLConnection *) httpDataAsyncByDelegate:(id)target
 {
 	if (target == nil)
 		return nil;
 	// end if target isn't there, because self cannot become delegator.
 
-	NSURLRequest *request;
-	request = [NSURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy
-						   timeoutInterval:timeout];
 	NSURLConnection *connection;
 	connection = [[NSURLConnection alloc] initWithRequest:request delegate:target];
 #if ! __has_feature(objc_arc)
@@ -277,22 +329,18 @@ const NSTimeInterval defaultTimeout = 30; // second
 - (NSData*) post:(NSError **)err;
 #endif
 {
-		// create request
-	NSMutableURLRequest* urlRequest = [[NSMutableURLRequest alloc]initWithURL:url];
 		// create psot body
 	NSString *message = [self buildParam];
 	NSURLResponse *resp = nil;
 	NSData *httpBody = [message dataUsingEncoding:NSUTF8StringEncoding];
+	[request setHTTPMethod:RequestMethodPost];
+	[request setHTTPBody:httpBody];
 	NSError *error = nil;
-	[urlRequest setHTTPMethod:RequestMethodPost];
-	[urlRequest setHTTPBody:httpBody];
-	NSData* result = [NSURLConnection sendSynchronousRequest:urlRequest
+	NSData* result = [NSURLConnection sendSynchronousRequest:request
 										   returningResponse:&resp
 													   error:&error];
 	response = [resp copy];
-#if ! __has_feature(objc_arc)
-	[urlRequest release];
-#endif
+	[request setHTTPBody:nil];
 	if (err != nil)
 		*err = error;
 	if ([error code] != noErr)
@@ -309,9 +357,8 @@ const NSTimeInterval defaultTimeout = 30; // second
 	{
 		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, key, [params objectForKey:key]]];
 	}// end for
-	param = [QueryConcatSymbol stringByAppendingString:
-			 [[messages componentsJoinedByString:ParamsConcatSymbol]
-			  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+	param = [[messages componentsJoinedByString:ParamsConcatSymbol]
+			  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 
 	return param;
 }// end - (NSString *) buildParam
