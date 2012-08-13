@@ -25,17 +25,9 @@
 						  [NSNumber numberWithUnsignedInt:NSISO2022JPStringEncoding],
 						  [NSNumber numberWithUnsignedInt:NSUnicodeStringEncoding],
 						  [NSNumber numberWithUnsignedInt:NSASCIIStringEncoding], nil];
-
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
-	[request setHTTPShouldHandleCookies:NO];
-	NSDictionary *dict = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
-	[request setAllHTTPHeaderFields:dict];
-	NSHTTPURLResponse *response = nil;
-	NSError *error = nil;
 	
 		// check have data
-	NSData *receivedData = [NSURLConnection sendSynchronousRequest:request
-												 returningResponse:&response error:&error];
+	NSData *receivedData = [self HTTPData:url cookie:cookies response:resp];
 	if (receivedData == nil)
 		return nil;
 	
@@ -43,10 +35,9 @@
 	NSString *data_str = nil;
 	for (NSNumber *enc in encodings)
 	{
-#if __has_feature(objc_arc)
 		data_str = [[NSString alloc] initWithData:receivedData encoding:[enc unsignedIntValue]];
-#else
-		data_str = [[[NSString alloc] initWithData:receivedData encoding:[enc unsignedIntValue]] autorelease];
+#if ! __has_feature(objc_arc)
+		[data_str autorelease];
 #endif
 		if (data_str!=nil)
 			break;
@@ -90,24 +81,49 @@
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
 {
-	self = [super initWithURL:url_ withParams:param];
+	self = [super initWithURL:url withParams:param];
 	if (self)
 	{
 		cookies = nil;
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param
+}// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
 
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookies_
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
 {
-	self = [super initWithURL:url_ withParams:param];
+	self = [super initWithURL:url withParams:param];
 	if (self)
 	{
-		cookies = [cookies_ copy];
+		cookies = [cookie copy];
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookies_
+}// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
+
+- (void) dealloc
+{
+#if ! __has_feature(objc_arc)
+	if (cookies != nil)		[cookies release];
+
+	[super dealloc];
+#endif
+}// end - (void) dealloc
+
+#pragma mark -
+#pragma mark accessor
+- (NSDictionary *) cookies
+{
+	return cookies;
+}// end - (NSDictionary *) cookies
+
+- (void) setCookies:(NSMutableDictionary *) cookie
+{
+#if ! __has_feature(objc_arc)
+	if (cookies != nil)		[cookies release];
+#endif
+	cookies = [[NSMutableDictionary alloc] initWithDictionary:cookie];
+	[request setAllHTTPHeaderFields:cookies];
+}// end - (void) setCookies:(NSMutableDictionary *) cookies_
 
 @end

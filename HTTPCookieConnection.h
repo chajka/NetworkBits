@@ -10,9 +10,9 @@
 
 @interface HTTPCookieConnection : HTTPConnection {
 @protected
-	NSMutableArray *cookies;
+	NSMutableDictionary *cookies;
 }
-@property (copy, readwrite) NSMutableArray *cookies;
+@property (copy, readwrite) NSMutableDictionary *cookies;
 	// class method
 /*!
 	@method HTTPData:response:
@@ -56,7 +56,7 @@
 	@param query parameters by key-value pair dictionary or nil.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param;
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param;
 
 /*!
 	@method initWithURL:withParams:
@@ -66,5 +66,5 @@
 	@param cookies for this connection.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookies_;
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie;
 @end
