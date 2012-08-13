@@ -10,9 +10,9 @@
 
 @interface HTTPCookieConnection : HTTPConnection {
 @protected
-	NSMutableDictionary *cookies;
+	NSMutableArray *cookies;
 }
-@property (copy, readwrite) NSMutableDictionary *cookies;
+@property (copy, readwrite) NSMutableArray *cookies;
 	// class method
 /*!
 	@method HTTPData:response:

@@ -91,12 +91,14 @@
 	return self;
 }// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
 
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
+- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSArray *)cookie
 {
 	self = [super initWithURL:url withParams:param];
 	if (self)
 	{
-		cookies = [cookie copy];
+		cookies = [[NSMutableArray alloc] initWithArray:cookie];
+		NSDictionary *header = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
+		[request setAllHTTPHeaderFields:header];
 	}// end if
 	return self;
 }// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
@@ -112,18 +114,19 @@
 
 #pragma mark -
 #pragma mark accessor
-- (NSDictionary *) cookies
+- (NSArray *) cookies
 {
 	return cookies;
 }// end - (NSDictionary *) cookies
 
-- (void) setCookies:(NSMutableDictionary *) cookie
+- (void) setCookies:(NSMutableArray *) cookie
 {
 #if ! __has_feature(objc_arc)
 	if (cookies != nil)		[cookies release];
 #endif
-	cookies = [[NSMutableDictionary alloc] initWithDictionary:cookie];
-	[request setAllHTTPHeaderFields:cookies];
-}// end - (void) setCookies:(NSMutableDictionary *) cookies_
+	cookies = [[NSMutableArray alloc] initWithArray:cookie];
+	NSDictionary *header = [NSHTTPCookie requestHeaderFieldsWithCookies:cookies];
+	[request setAllHTTPHeaderFields:header];
+}// end - (void) setCookies:(NSMutableDictionary *) cookie
 
 @end
