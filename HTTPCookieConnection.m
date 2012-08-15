@@ -8,6 +8,10 @@
 
 #import "HTTPCookieConnection.h"
 
+@interface HTTPCookieConnection (private)
+- (NSMutableArray *) peekCookies:(NSString *)query;
+@end
+
 @implementation HTTPCookieConnection
 @synthesize cookies;
 
@@ -77,6 +81,7 @@
 	if (self)
 	{
 		cookies = nil;
+		query = nil;
 	}// end if
 	return self;
 }// end - (id) init
@@ -114,6 +119,7 @@
 
 #pragma mark -
 #pragma mark accessor
+#pragma mark cookies accessor
 - (NSArray *) cookies
 {
 	return cookies;
@@ -129,4 +135,23 @@
 	[request setAllHTTPHeaderFields:header];
 }// end - (void) setCookies:(NSMutableDictionary *) cookie
 
+#pragma mark query’s accessor
+- (NSString *) query
+{
+	return query;
+}// end - (NSString *) query
+
+- (void) setQuery:(NSString *)queryString
+{
+	query = [queryString copy];
+	NSMutableArray *tmpCookies = [self peekCookies:query];
+	[self setCookies:tmpCookies];
+}// end - (void) setQuery:(NSString *)queryString
+
+#pragma mark -
+#pragma mark internal
+- (NSMutableArray *) peekCookies:(NSString *)query
+{
+	return [NSMutableArray array];
+}// end - (NSMutableArray *) peekCookies:(NSString *)query
 @end
