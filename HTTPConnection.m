@@ -186,7 +186,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (void) dealloc
 {
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
     if (URL != nil)			[URL release];
 	if (path != nil)		[path release];
 	if (params != nil)		[params release];
@@ -205,7 +205,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (void) setURL:(NSURL *)url
 {
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 	if (URL != nil)			[URL release];
 #endif
 	URL = [url copy];
@@ -216,7 +216,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 #pragma mark instance methods
 - (void) clearResponse
 {
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 	[response autorelease];
 #endif
 	response = nil;
@@ -315,7 +315,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 	NSURLConnection *connection;
 	connection = [[NSURLConnection alloc] initWithRequest:request delegate:target];
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 	[connection autorelease];
 #endif
 	

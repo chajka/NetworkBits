@@ -40,7 +40,7 @@
 	for (NSNumber *enc in encodings)
 	{
 		data_str = [[NSString alloc] initWithData:receivedData encoding:[enc unsignedIntValue]];
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 		[data_str autorelease];
 #endif
 		if (data_str!=nil)
@@ -110,7 +110,7 @@
 
 - (void) dealloc
 {
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 	if (cookies != nil)		[cookies release];
 
 	[super dealloc];
@@ -127,7 +127,7 @@
 
 - (void) setCookies:(NSMutableArray *) cookie
 {
-#if ! __has_feature(objc_arc)
+#if !__has_feature(objc_arc)
 	if (cookies != nil)		[cookies release];
 #endif
 	cookies = [[NSMutableArray alloc] initWithArray:cookie];
