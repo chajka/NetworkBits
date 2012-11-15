@@ -58,7 +58,7 @@
 	@param query parameters by key-value pair dictionary or nil.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param;
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param;
 
 /*!
 	@method initWithURL:withParams:
@@ -68,5 +68,13 @@
 	@param cookies for this connection.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie;
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie;
+
+/*
+	@method initWithDomain:
+	@abstract create HTTPConnection object for domain.
+	@param domain path of cookie.
+	@result new HTTPConnection object with cookie.
+*/
+- (id) initWithDomain:(NSString *)domain;
 @end

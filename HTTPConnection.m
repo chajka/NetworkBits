@@ -169,7 +169,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
 {
 	self = [super init];
 	if (self)

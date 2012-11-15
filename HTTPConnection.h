@@ -90,7 +90,7 @@
 	@param query parameters by key-value pair dictionary or nil.
 	@result new HTTPConnection object with URL. 
 */
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param;
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param;
 	// instance methods
 /*!
 	@method clearResponse

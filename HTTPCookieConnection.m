@@ -86,19 +86,19 @@
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
 {
-	self = [super initWithURL:url withParams:param];
+	self = [super initWithURL:url andParams:param];
 	if (self)
 	{
 		cookies = nil;
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param
+}// end - (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
 
-- (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSArray *)cookie
+- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSArray *)cookie
 {
-	self = [super initWithURL:url withParams:param];
+	self = [super initWithURL:url andParams:param];
 	if (self)
 	{
 		cookies = [[NSMutableArray alloc] initWithArray:cookie];
@@ -106,7 +106,18 @@
 		[request setAllHTTPHeaderFields:header];
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url withParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
+}// end - (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
+
+- (id) initWithDomain:(NSString *)domain
+{
+	self = [super init];
+	if (self)
+	{
+		cookies = [[NSMutableArray alloc] init];
+	}// end if
+
+	return self;
+}// end - (id) initWithDomain:(NSString *)domain
 
 - (void) dealloc
 {
