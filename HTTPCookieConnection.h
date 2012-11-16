@@ -11,10 +11,10 @@
 @interface HTTPCookieConnection : HTTPConnection {
 @protected
 	NSMutableArray	*cookies;
-	NSString		*query;
+	NSString		*domainName;
 }
-@property (copy, readwrite) NSMutableArray	*cookies;
-@property (copy, readwrite) NSString		*query;
+@property (retain,readwrite) NSMutableArray	*cookies;
+@property (copy, readwrite) NSString		*domainName;
 	// class method
 /*!
 	@method HTTPData:response:
@@ -52,29 +52,29 @@
 - (id) init;
 
 /*!
-	@method initWithURL:withParams:
-	@abstract create HTTPConnection object with URL and query paramerters.
+	@method initForURL:withParams:
+	@abstract create HTTPConnection object for URL and query paramerters.
 	@param URL of access this object.
 	@param query parameters by key-value pair dictionary or nil.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param;
+- (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param;
 
 /*!
-	@method initWithURL:withParams:
-	@abstract create HTTPConnection object with URL and query paramerters.
+	@method initForURL:withCookies:
+	@abstract create HTTPConnection object for URL and query paramerters.
 	@param URL of access this object.
 	@param query parameters by key-value pair dictionary or nil.
 	@param cookies for this connection.
 	@result new HTTPConnection object with URL.
 */
-- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie;
+- (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param withCookies:(NSArray *)cookie;
 
 /*
-	@method initWithDomain:
+	@method initForDomain:
 	@abstract create HTTPConnection object for domain.
 	@param domain path of cookie.
 	@result new HTTPConnection object with cookie.
 */
-- (id) initWithDomain:(NSString *)domain;
+- (id) initForDomain:(NSString *)domain;
 @end

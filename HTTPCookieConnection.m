@@ -9,11 +9,10 @@
 #import "HTTPCookieConnection.h"
 
 @interface HTTPCookieConnection (private)
-- (NSMutableArray *) peekCookies:(NSString *)query;
+- (NSMutableArray *) peekCookiesForDomain:(NSString *)query;
 @end
 
 @implementation HTTPCookieConnection
-@synthesize cookies;
 
 #pragma mark class methods
 #if __has_feature(objc_arc)
@@ -81,22 +80,23 @@
 	if (self)
 	{
 		cookies = nil;
-		query = nil;
+		domainName = nil;
 	}// end if
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
+- (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param
 {
 	self = [super initWithURL:url andParams:param];
 	if (self)
 	{
 		cookies = nil;
+		domainName = nil;
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
+}// end - (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param
 
-- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSArray *)cookie
+- (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param withCookies:(NSArray *)cookie
 {
 	self = [super initWithURL:url andParams:param];
 	if (self)
@@ -106,9 +106,9 @@
 		[request setAllHTTPHeaderFields:header];
 	}// end if
 	return self;
-}// end - (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param andCookies:(NSMutableArray *)cookie
+}// end - (id) initForURL:(NSURL *)url andParams:(NSDictionary *)param withCookies:(NSMutableArray *)cookie
 
-- (id) initWithDomain:(NSString *)domain
+- (id) initForDomain:(NSString *)domain
 {
 	self = [super init];
 	if (self)
@@ -117,7 +117,7 @@
 	}// end if
 
 	return self;
-}// end - (id) initWithDomain:(NSString *)domain
+}// end - (id) initForDomain:(NSString *)domain
 
 - (void) dealloc
 {
@@ -136,7 +136,7 @@
 	return cookies;
 }// end - (NSDictionary *) cookies
 
-- (void) setCookies:(NSMutableArray *) cookie
+- (void) setCookies:(NSMutableArray *)cookie
 {
 #if !__has_feature(objc_arc)
 	if (cookies != nil)		[cookies release];
@@ -147,22 +147,22 @@
 }// end - (void) setCookies:(NSMutableDictionary *) cookie
 
 #pragma mark query’s accessor
-- (NSString *) query
+- (NSString *) domainName
 {
-	return query;
-}// end - (NSString *) query
+	return domainName;
+}// end - (NSString *) domainName
 
-- (void) setQuery:(NSString *)queryString
+- (void) setDomainName:(NSString *)domain
 {
-	query = [queryString copy];
-	NSMutableArray *tmpCookies = [self peekCookies:query];
+	domainName = [domain copy];
+	NSMutableArray *tmpCookies = [self peekCookiesForDomain:domainName];
 	[self setCookies:tmpCookies];
 }// end - (void) setQuery:(NSString *)queryString
 
 #pragma mark -
 #pragma mark internal
-- (NSMutableArray *) peekCookies:(NSString *)query
+- (NSMutableArray *) peekCookiesForDomain:(NSString *)domain
 {
 	return [NSMutableArray array];
-}// end - (NSMutableArray *) peekCookies:(NSString *)query
+}// end - (NSMutableArray *) peekCookiesForDomain:(NSString *)query
 @end
