@@ -40,6 +40,8 @@
 }
 @property (readonly) NSString *serverName;
 @property (readonly) int portNumber;
+@property (readonly) NSInputStream	*inputStream;
+@property (readonly) NSOutputStream	*outputStream;
 @property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
 

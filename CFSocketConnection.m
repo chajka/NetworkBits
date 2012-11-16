@@ -92,6 +92,26 @@ static BOOL haveOStreamEventNone = NO;
 #endif
 
 #pragma mark -
+#pragma mark accessor
+- (NSInputStream *) inputStream
+{
+#if __has_feature(objc_arc)
+	return (__bridge NSInputStream *)readStream;
+#else
+	return (NSInputStream *)readStream;
+#endif
+}// end - (NSInputStream *) inputStream
+
+- (NSOutputStream *) outputStream
+{
+#if __has_feature(objc_arc)
+	return (__bridge NSOutputStream *)writeStream;
+#else
+	return (NSOutputStream *)writeStream;
+#endif
+}// end - (NSInputStream *) inputStream
+
+#pragma mark -
 #pragma mark action
 - (BOOL) readyToConnect
 {
