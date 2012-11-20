@@ -25,15 +25,16 @@
 - (void) oStreamEndEncounted:(NSOutputStream *)oStream;
 - (void) oStreamErrorOccured:(NSOutputStream *)oStream;
 @optional
-- (void) oStreamOpenCompleted:(NSOutputStream *)oStream;
 - (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream;
+- (void) oStreamOpenCompleted:(NSOutputStream *)oStream;
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
 @interface CFSocketConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
 		// connection specific variables
-	NSString *serverName;
-	int portNumber;
+	NSString	*serverName;
+	int			portNumber;
+	BOOL		canConnect;
 		// process stream specific variables
 	__strong id <InputStreamConnectionDelegate> inputDelegator;
 	__strong id <OutputStreamConnectionDelegate> outputDelegator;
@@ -47,9 +48,9 @@
 
 - (id) initWithServerName:(NSString *)server andPort:(int)port;
 
+- (BOOL) checkReadyToConnect;
 - (BOOL) connect;
 - (void) disconnect;
-- (BOOL) readyToConnect;
 - (void) closeReadStream;
 - (void) closeWriteStream;
 
