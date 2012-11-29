@@ -8,6 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 
+#define ReadStreamError				@"ReadStreamError"
+#define WriteStreamError			@"WriteStreamError"
+#define ReadStreamSetupError		@"ReadStreamSetupError"
+#define WriteStreamSetupError		@"WriteStreamSetupError"
+
 @protocol InputStreamConnectionDelegate <NSObject>
 @required
 - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream;
@@ -25,24 +30,31 @@
 - (void) oStreamEndEncounted:(NSOutputStream *)oStream;
 - (void) oStreamErrorOccured:(NSOutputStream *)oStream;
 @optional
-- (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream;
 - (void) oStreamOpenCompleted:(NSOutputStream *)oStream;
+- (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream;
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
 @interface CFSocketConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
 		// connection specific variables
-	NSString	*serverName;
-	int			portNumber;
-	BOOL		canConnect;
+	NSString			*serverName;
+	int					portNumber;
+	BOOL				canConnect;
 		// process stream specific variables
 	__strong id <InputStreamConnectionDelegate> inputDelegator;
 	__strong id <OutputStreamConnectionDelegate> outputDelegator;
+		// stream specific variables
+	CFReadStreamRef		readStream;
+	CFWriteStreamRef	writeStream;
+	CFOptionFlags		readStreamOptions;
+	CFOptionFlags		writeStreamOptions;
+	BOOL				readStreamIsSetuped;
+	BOOL				writeStreamIsSetuped;
 }
 @property (readonly) NSString *serverName;
 @property (readonly) int portNumber;
-@property (readonly) NSInputStream	*inputStream;
-@property (readonly) NSOutputStream	*outputStream;
+@property (readonly) NSInputStream	*readStream;
+@property (readonly) NSOutputStream	*writeStream;
 @property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
 
@@ -51,7 +63,9 @@
 - (BOOL) checkReadyToConnect;
 - (BOOL) connect;
 - (void) disconnect;
+- (BOOL) reconnectReadStream;
 - (void) closeReadStream;
+- (BOOL) reconnectWriteStream;
 - (void) closeWriteStream;
 
 @end
