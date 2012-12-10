@@ -237,7 +237,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	{		// check error
 		__autoreleasing NSError *err =
 #if __has_feature(objc_arc)
-			(__bridge NSError *)CFReadStreamCopyError(readStream);
+			(__bridge_transfer NSError *)CFReadStreamCopyError(readStream);
 #else
 			(NSError *)CFReadStreamCopyError(readStream);
 		[err autorelease];
@@ -256,7 +256,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	{		// open failed cleanup read stream
         __autoreleasing NSError *err =
 #if __has_feature(objc_arc)
-			(__bridge NSError *)CFReadStreamCopyError(readStream);
+			(__bridge_transfer NSError *)CFReadStreamCopyError(readStream);
 #else
 			(NSError *)CFReadStreamCopyError(readStream);
 		[err autorelease];
@@ -291,7 +291,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	{
 		__autoreleasing NSError *err =
 #if __has_feature(objc_arc)
-			(__bridge NSError *)CFWriteStreamCopyError(writeStream);
+			(__bridge_transfer NSError *)CFWriteStreamCopyError(writeStream);
 #else
 			(NSError *)CFWriteStreamCopyError(writeStream);
 		[err autorelease];
@@ -310,7 +310,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	{		// open failed cleanup write stream
         __autoreleasing NSError *err =
 #if __has_feature(objc_arc)
-			(__bridge NSError *)CFWriteStreamCopyError(writeStream);
+			(__bridge_transfer NSError *)CFWriteStreamCopyError(writeStream);
 #else
 			(NSError *)CFWriteStreamCopyError(writeStream);
 		[err autorelease];
