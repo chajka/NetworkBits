@@ -12,7 +12,7 @@
 @protected
 	NSURL				*URL;
 	NSString			*path;
-	NSDictionary		*params;
+	NSMutableDictionary	*params;
 	NSURLResponse		*response;
 	NSTimeInterval		timeout;
 	NSMutableURLRequest	*request;
@@ -101,9 +101,17 @@
 - (void) clearResponse;
 
 /*!
+	@method setURL:andParams
+	@abstract set URL and it’s paramater at single method
+	@param request URL to access
+	@param key-value pair of params to requested URL
+*/
+- (void) setURL:(NSURL *)URL andParams:(NSDictionary *)params;
+
+/*!
 	@method stringByGet
 	@abstract get contents of URL by string format with own parameters.
- */
+*/
 - (NSString *) stringByGet;
 
 /*!

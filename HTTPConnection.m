@@ -32,7 +32,6 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 @implementation HTTPConnection
 @synthesize path;
-@synthesize params;
 @synthesize response;
 @synthesize timeout;
 
@@ -169,7 +168,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 	return self;
 }// end - (id) init
 
-- (id) initWithURL:(NSURL *)url andParams:(NSDictionary *)param
+- (id) initWithURL:(NSURL *)url andParams:(NSMutableDictionary *)param
 {
 	self = [super init];
 	if (self)
@@ -196,8 +195,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 #endif
 }// end - (void) dealloc
 
-#pragma mark -
-#pragma mark URL’s accessor
+#pragma mark - URL’s accessor
 - (NSURL *) URL
 {
 	return URL;
@@ -205,12 +203,42 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (void) setURL:(NSURL *)url
 {
+	if ([URL isEqualTo:url] == YES)
+		return;
 #if !__has_feature(objc_arc)
 	if (URL != nil)			[URL release];
+	if (params != nil)		[params release];
+#endif
+	URL = [url copy];
+	params = nil;
+	[request setURL:URL];
+}// end - (void) setURL:(NSURL *)url
+
+- (void) setURL:(NSURL *)url andParams:(NSDictionary *)param
+{
+#if !__has_feature(objc_arc)
+	if (URL != nil)			[URL release];
+	if (params != nil)		[param release];
 #endif
 	URL = [url copy];
 	[request setURL:URL];
-}// end - (void) setURL:(NSURL *)url
+	params =[param copy];
+}// end - (void) setURL:(NSURL *)url andParams:(NSDictionary *)param
+
+#pragma mark - Params’s accessor
+- (NSDictionary *)params
+{
+	return params;
+}// end - (NSDictionary *)params
+
+- (void) setParams:(NSDictionary *)param
+{
+#if !__has_feature(objc_arc)
+	if (params != nil)
+		[params release];
+#endif
+	params = [param copy];
+}// end if
 
 #pragma mark -
 #pragma mark instance methods
