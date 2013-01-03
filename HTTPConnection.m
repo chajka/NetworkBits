@@ -164,6 +164,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 		request = [[NSMutableURLRequest alloc] init];
 		[request setCachePolicy:NSURLCacheStorageAllowedInMemoryOnly];
 		[request setTimeoutInterval:timeout];
+		params = [[NSMutableDictionary alloc] init];
 	}// end if self
 	return self;
 }// end - (id) init
@@ -207,10 +208,9 @@ const NSTimeInterval defaultTimeout = 30; // second
 		return;
 #if !__has_feature(objc_arc)
 	if (URL != nil)			[URL release];
-	if (params != nil)		[params release];
 #endif
 	URL = [url copy];
-	params = nil;
+	[params removeAllObjects];
 	[request setURL:URL];
 }// end - (void) setURL:(NSURL *)url
 
@@ -218,11 +218,11 @@ const NSTimeInterval defaultTimeout = 30; // second
 {
 #if !__has_feature(objc_arc)
 	if (URL != nil)			[URL release];
-	if (params != nil)		[param release];
 #endif
 	URL = [url copy];
 	[request setURL:URL];
-	params =[param copy];
+	[params removeAllObjects];
+	[params addEntriesFromDictionary:param];
 }// end - (void) setURL:(NSURL *)url andParams:(NSDictionary *)param
 
 #pragma mark - Params’s accessor
@@ -233,11 +233,8 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (void) setParams:(NSDictionary *)param
 {
-#if !__has_feature(objc_arc)
-	if (params != nil)
-		[params release];
-#endif
-	params = [param copy];
+	[params removeAllObjects];
+	[params addEntriesFromDictionary:param];
 }// end if
 
 #pragma mark -
@@ -379,6 +376,9 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 - (NSString *) buildParam
 {
+	if ([params count] == 0)
+		return @"";
+
 	NSString *param = nil;
 	NSMutableArray *messages = [NSMutableArray array];
 	for (NSString *key in [params allKeys])

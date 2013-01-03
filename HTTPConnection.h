@@ -19,7 +19,7 @@
 }
 @property (copy, readwrite)		NSURL				*URL;
 @property (copy, readwrite)		NSString			*path;
-@property (copy, readwrite)		NSDictionary		*params;
+@property (copy, readwrite)		NSMutableDictionary	*params;
 @property (readonly)			NSURLResponse		*response;
 @property (assign, readwrite)	NSTimeInterval		timeout;
 	// class method
