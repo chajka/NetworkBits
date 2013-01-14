@@ -235,7 +235,10 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #endif
     if (!CFReadStreamSetClient(readStream, readStreamOptions, read_stream_callback, &context))
 	{		// check error
-		__autoreleasing NSError *err =
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
+		__autoreleasing
+#endif
+		NSError *err =
 #if __has_feature(objc_arc)
 			(__bridge_transfer NSError *)CFReadStreamCopyError(readStream);
 #else
@@ -254,7 +257,10 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 		// check can open read stream
     if (!CFReadStreamOpen(readStream))
 	{		// open failed cleanup read stream
-        __autoreleasing NSError *err =
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
+        __autoreleasing
+#endif
+		NSError *err =
 #if __has_feature(objc_arc)
 			(__bridge_transfer NSError *)CFReadStreamCopyError(readStream);
 #else
@@ -289,7 +295,10 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #endif
     if (!CFWriteStreamSetClient(writeStream, writeStreamOptions, write_stream_callback, &context))
 	{
-		__autoreleasing NSError *err =
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
+		__autoreleasing
+#endif
+		NSError *err =
 #if __has_feature(objc_arc)
 			(__bridge_transfer NSError *)CFWriteStreamCopyError(writeStream);
 #else
@@ -308,7 +317,10 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 		// check can open read stream
     if (!CFWriteStreamOpen(writeStream))
 	{		// open failed cleanup write stream
-        __autoreleasing NSError *err =
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
+		__autoreleasing
+#endif
+		NSError *err =
 #if __has_feature(objc_arc)
 			(__bridge_transfer NSError *)CFWriteStreamCopyError(writeStream);
 #else
