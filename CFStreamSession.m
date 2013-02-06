@@ -1,15 +1,15 @@
 //
-//  CFSocketConnection.m
+//  CFStreamSession.m
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
 //  Copyright (c) 2012 iom. All rights reserved.
 //
 
-#import "CFSocketConnection.h"
+#import "CFStreamSession.h"
 #import <CoreFoundation/CoreFoundation.h>
 
-@interface CFSocketConnection (private)
+@interface CFStreamSession (private)
 - (void) setupReadStream;
 - (void) runReadStream;
 - (void) cleanupReadStream;
@@ -21,7 +21,7 @@ static void read_stream_callback(CFReadStreamRef iStream, CFStreamEventType even
 static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
 @end
 
-@implementation CFSocketConnection
+@implementation CFStreamSession
 @synthesize serverName;
 @synthesize portNumber;
 	//
@@ -346,12 +346,12 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #pragma mark -
 #pragma mark delegator process methods
 #pragma mark accessor of inputStreamDelegate
-- (id <InputStreamConnectionDelegate>) inputStreamDelegate
+- (id <InputStreamSessionDelegate>) inputStreamDelegate
 {
 	return inputDelegator;
 }// end nputStreamDelegate
 
-- (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
+- (void) setInputStreamDelegate:(id <InputStreamSessionDelegate>)delegate
 {
 # if !__has_feature(objc_arc)
 		// check current delegate
@@ -383,12 +383,12 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 }// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
 
 #pragma mark accessor of outputStreamDelegate
-- (id <OutputStreamConnectionDelegate>) outputStreamDelegate
+- (id <OutputStreamSessionDelegate>) outputStreamDelegate
 {
 	return outputDelegator;
 }// end nputStreamDelegate
 
-- (void) setOutputStreamDelegate:(id <OutputStreamConnectionDelegate>)delegate
+- (void) setOutputStreamDelegate:(id <OutputStreamSessionDelegate>)delegate
 {
 # if !__has_feature(objc_arc)
 		// check current delegate
@@ -417,11 +417,11 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	if ([outputDelegator respondsToSelector:@selector(oStreamNone:)] == YES)
 		writeStreamOptions |= kCFStreamEventNone;
 	
-}// end - (void) setOutputStreamDelegate:(id <OutputStreamConnectionDelegate>)delegate
+}// end - (void) setOutputStreamDelegate:(id <OutputStreamSessionDelegate>)delegate
 
 #pragma mark -
 #pragma mark delegator methods
-#pragma mark InputStreamConnectionDelegate methods
+#pragma mark InputStreamSessionDelegate methods
 - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream
 {
 }// end - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream
@@ -446,7 +446,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 {
 }// end - (void) iStreamNone:(NSStream *)iStream
 
-#pragma mark OutputStreamConnectionDelegate methods
+#pragma mark OutputStreamSessionDelegate methods
 - (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream
 {
 }// end - (void) oStreamCanAcceptBytes:(NSInputStream *)oStream

@@ -1,5 +1,5 @@
 //
-//  CFSocketConnection.h
+//  CFStreamSession.h
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
@@ -13,7 +13,7 @@
 #define ReadStreamSetupError		@"ReadStreamSetupError"
 #define WriteStreamSetupError		@"WriteStreamSetupError"
 
-@protocol InputStreamConnectionDelegate <NSObject>
+@protocol InputStreamSessionDelegate <NSObject>
 @required
 - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream;
 - (void) iStreamEndEncounted:(NSInputStream *)iStream;
@@ -24,7 +24,7 @@
 - (void) iStreamNone:(NSStream *)iStream;
 @end
 
-@protocol OutputStreamConnectionDelegate <NSObject>
+@protocol OutputStreamSessionDelegate <NSObject>
 @required
 - (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream;
 - (void) oStreamEndEncounted:(NSOutputStream *)oStream;
@@ -35,14 +35,14 @@
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
-@interface CFSocketConnection : NSObject <InputStreamConnectionDelegate, OutputStreamConnectionDelegate> {
+@interface CFStreamSession : NSObject <InputStreamSessionDelegate, OutputStreamSessionDelegate> {
 		// connection specific variables
 	NSString			*serverName;
 	int					portNumber;
 	BOOL				canConnect;
 		// process stream specific variables
-	__strong id <InputStreamConnectionDelegate> inputDelegator;
-	__strong id <OutputStreamConnectionDelegate> outputDelegator;
+	__strong id <InputStreamSessionDelegate> inputDelegator;
+	__strong id <OutputStreamSessionDelegate> outputDelegator;
 		// stream specific variables
 	CFReadStreamRef		readStream;
 	CFWriteStreamRef	writeStream;
@@ -55,8 +55,8 @@
 @property (readonly) int portNumber;
 @property (readonly) NSInputStream	*readStream;
 @property (readonly) NSOutputStream	*writeStream;
-@property (retain, readwrite) id <InputStreamConnectionDelegate> inputStreamDelegate;
-@property (retain, readwrite) id <OutputStreamConnectionDelegate> outputStreamDelegate;
+@property (retain, readwrite) id <InputStreamSessionDelegate> inputStreamDelegate;
+@property (retain, readwrite) id <OutputStreamSessionDelegate> outputStreamDelegate;
 
 - (id) initWithServerName:(NSString *)server andPort:(int)port;
 

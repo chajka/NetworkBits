@@ -290,7 +290,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 #endif
 {
 	NSData *receivedData = [self post:error];
-	if ([*error code] != noErr)
+	if (error != nil)
 		return nil;
 		// create detamine encoding constant array 
 	NSArray *encodings = [NSArray arrayWithObjects:
