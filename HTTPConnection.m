@@ -196,6 +196,13 @@ const NSTimeInterval defaultTimeout = 30; // second
 #endif
 }// end - (void) dealloc
 
+- (void) addCustomHeaders:(NSString *)referer
+{
+	[request setValue:HeaderValueAccept forHTTPHeaderField:HeaderFieldAccept];
+	[request setValue:HeaderValueContentType forHTTPHeaderField:HeaderFieldContentType];
+	[request setValue:referer forHTTPHeaderField:HeaderFieldReferer];
+}// end - (void) addCustomHeaders:(NSString *)referer
+
 #pragma mark - URL’s accessor
 - (NSURL *) URL
 {
