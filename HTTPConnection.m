@@ -364,7 +364,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 		// create psot body
 	NSString *message = [self buildParam];
 	NSURLResponse *resp = nil;
-	NSData *httpBody = [message dataUsingEncoding:NSUTF8StringEncoding];
+	NSData *httpBody = [message dataUsingEncoding:NSISOLatin1StringEncoding];
 	[request setHTTPMethod:RequestMethodPost];
 	[request setHTTPBody:httpBody];
 	NSError *error = nil;
@@ -390,10 +390,10 @@ const NSTimeInterval defaultTimeout = 30; // second
 	NSMutableArray *messages = [NSMutableArray array];
 	for (NSString *key in [params allKeys])
 	{
-		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, key, [params objectForKey:key]]];
+		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, key,
+							 [[params objectForKey:key] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
 	}// end for
-	param = [[messages componentsJoinedByString:ParamsConcatSymbol]
-			  stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+	param = [messages componentsJoinedByString:ParamsConcatSymbol];
 
 	return param;
 }// end - (NSString *) buildParam
