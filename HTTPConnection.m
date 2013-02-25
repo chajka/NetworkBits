@@ -8,6 +8,13 @@
 
 #import "HTTPConnection.h"
 
+#define	Percent					CFSTR("%")
+#define HeaderFieldAccept		@"Accept"
+#define HeaderValueAccept		@"text/html, application/xml, text/xml, */*"
+#define HeaderFieldContentType	@"Content-Type"
+#define HeaderValueContentType	@"application/x-www-form-urlencoded; charset=UTF-8"
+#define HeaderFieldReferer		@"Referer"
+
 const NSTimeInterval defaultTimeout = 30; // second
 
 #pragma mark private methods
@@ -388,10 +395,45 @@ const NSTimeInterval defaultTimeout = 30; // second
 
 	NSString *param = nil;
 	NSMutableArray *messages = [NSMutableArray array];
+	CFStringRef value = NULL;
+	CFStringRef escValue = NULL;
+	CFStringRef origKey = NULL;
+	CFStringRef escKey = NULL;
+	CFStringRef invalid = NULL;
+	NSString *escapedKey = nil;
+	NSString *escapedValue = nil;
 	for (NSString *key in [params allKeys])
 	{
-		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, key,
-							 [[params objectForKey:key] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]]];
+#if __has_feature(objc_arc)
+		value = (__bridge CFStringRef)[params valueForKey:key];
+		origKey = (__bridge CFStringRef)key;
+#else
+		value = (CFStringRef)[params valueForKey:key];
+		origKey = (CFStringRef)key;
+#endif
+		CFRange found;
+		found = CFStringFind(origKey, Percent, kCFCompareCaseInsensitive);
+		invalid = NULL;
+		if (found.location != NSNotFound)
+			invalid = Percent;
+		escKey = CFURLCreateStringByAddingPercentEscapes(
+					 kCFAllocatorDefault, origKey, invalid, NULL, kCFStringEncodingUTF8);
+		found = CFStringFind(value, Percent, kCFCompareCaseInsensitive);
+		invalid = NULL;
+		if (found.location != NSNotFound)
+			invalid = Percent;
+		escValue = CFURLCreateStringByAddingPercentEscapes(
+					 kCFAllocatorDefault, value, invalid, NULL, kCFStringEncodingUTF8);
+#if __has_feature(objc_arc)
+		escapedKey = (__bridge NSString *)escKey;
+		escapedValue = (__bridge NSString *)escValue;
+#else
+		escapedKey = (NSString *)escKey;
+		escapedValue = (NSString *)escValue;
+#endif
+		[messages addObject:[NSString stringWithFormat:ParamConcatFormat, escapedKey, escapedValue]];
+		CFRelease(escKey);
+		CFRelease(escValue);
 	}// end for
 	param = [messages componentsJoinedByString:ParamsConcatSymbol];
 

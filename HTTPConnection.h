@@ -8,12 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-#define HeaderFieldAccept		@"Accept"
-#define HeaderValueAccept		@"text/html, application/xml, text/xml, */*"
-#define HeaderFieldContentType	@"Content-Type"
-#define HeaderValueContentType	@"application/x-www-form-urlencoded; charset=UTF-8"
-#define HeaderFieldReferer		@"Referer"
-
 @interface HTTPConnection : NSObject {
 @protected
 	NSURL				*URL;
