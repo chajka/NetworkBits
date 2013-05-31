@@ -1,5 +1,5 @@
 //
-//  CFStreamSession.h
+//  YCStreamSession.h
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
@@ -35,7 +35,7 @@
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
-@interface CFStreamSession : NSObject <InputStreamSessionDelegate, OutputStreamSessionDelegate> {
+@interface YCStreamSession : NSObject <InputStreamSessionDelegate, OutputStreamSessionDelegate> {
 		// connection specific variables
 	NSString			*serverName;
 	int					portNumber;

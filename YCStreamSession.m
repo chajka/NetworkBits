@@ -1,15 +1,15 @@
 //
-//  CFStreamSession.m
+//  YCStreamSession.m
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
 //  Copyright (c) 2012 iom. All rights reserved.
 //
 
-#import "CFStreamSession.h"
+#import "YCStreamSession.h"
 #import <CoreFoundation/CoreFoundation.h>
 
-@interface CFStreamSession (private)
+@interface YCStreamSession (private)
 - (void) setupReadStream;
 - (void) runReadStream;
 - (void) cleanupReadStream;
@@ -21,7 +21,7 @@ static void read_stream_callback(CFReadStreamRef iStream, CFStreamEventType even
 static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
 @end
 
-@implementation CFStreamSession
+@implementation YCStreamSession
 @synthesize serverName;
 @synthesize portNumber;
 	//
