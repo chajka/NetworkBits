@@ -41,8 +41,8 @@
 	int					portNumber;
 	BOOL				canConnect;
 		// process stream specific variables
-	__strong id <InputStreamSessionDelegate> inputDelegator;
-	__strong id <OutputStreamSessionDelegate> outputDelegator;
+	id <InputStreamSessionDelegate> inputDelegator;
+	id <OutputStreamSessionDelegate> outputDelegator;
 		// stream specific variables
 	CFReadStreamRef		readStream;
 	CFWriteStreamRef	writeStream;
@@ -55,9 +55,13 @@
 @property (readonly) int portNumber;
 @property (readonly) NSInputStream	*readStream;
 @property (readonly) NSOutputStream	*writeStream;
+#if __has_feature(objc_arc)
+@property (strong, readwrite) id <InputStreamSessionDelegate> inputStreamDelegate;
+@property (strong, readwrite) id <OutputStreamSessionDelegate> outputStreamDelegate;
+#else
 @property (retain, readwrite) id <InputStreamSessionDelegate> inputStreamDelegate;
 @property (retain, readwrite) id <OutputStreamSessionDelegate> outputStreamDelegate;
-
+#endif
 - (id) initWithServerName:(NSString *)server andPort:(int)port;
 
 - (BOOL) checkReadyToConnect;
