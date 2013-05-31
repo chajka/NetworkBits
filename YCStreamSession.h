@@ -13,36 +13,33 @@
 #define ReadStreamSetupError		@"ReadStreamSetupError"
 #define WriteStreamSetupError		@"WriteStreamSetupError"
 
-@protocol InputStreamSessionDelegate <NSObject>
+@protocol YCStreamSessionDelegate <NSObject>
 @required
+
 - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream;
 - (void) iStreamEndEncounted:(NSInputStream *)iStream;
-- (void) iStreamErrorOccured:(NSInputStream *)iStream;
+
+- (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream;
+- (void) oStreamEndEncounted:(NSOutputStream *)oStream;
 @optional
+- (void) iStreamErrorOccured:(NSInputStream *)iStream;
 - (void) iStreamOpenCompleted:(NSInputStream *)iStream;
 - (void) iStreamCanAcceptBytes:(NSInputStream *)iStream;
 - (void) iStreamNone:(NSStream *)iStream;
-@end
 
-@protocol OutputStreamSessionDelegate <NSObject>
-@required
-- (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream;
-- (void) oStreamEndEncounted:(NSOutputStream *)oStream;
 - (void) oStreamErrorOccured:(NSOutputStream *)oStream;
-@optional
 - (void) oStreamOpenCompleted:(NSOutputStream *)oStream;
 - (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream;
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
-@interface YCStreamSession : NSObject <InputStreamSessionDelegate, OutputStreamSessionDelegate> {
+@interface YCStreamSession : NSObject <YCStreamSessionDelegate> {
 		// connection specific variables
 	NSString			*serverName;
 	int					portNumber;
 	BOOL				canConnect;
 		// process stream specific variables
-	id <InputStreamSessionDelegate> inputDelegator;
-	id <OutputStreamSessionDelegate> outputDelegator;
+	id <YCStreamSessionDelegate> delegate;
 		// stream specific variables
 	CFReadStreamRef		readStream;
 	CFWriteStreamRef	writeStream;
@@ -56,11 +53,9 @@
 @property (readonly) NSInputStream	*readStream;
 @property (readonly) NSOutputStream	*writeStream;
 #if __has_feature(objc_arc)
-@property (strong, readwrite) id <InputStreamSessionDelegate> inputStreamDelegate;
-@property (strong, readwrite) id <OutputStreamSessionDelegate> outputStreamDelegate;
+@property (strong, readwrite) id <YCStreamSessionDelegate> delegate;
 #else
-@property (retain, readwrite) id <InputStreamSessionDelegate> inputStreamDelegate;
-@property (retain, readwrite) id <OutputStreamSessionDelegate> outputStreamDelegate;
+@property (retain, readwrite) id <YCStreamSessionDelegate> delegate;
 #endif
 - (id) initWithServerName:(NSString *)server andPort:(int)port;
 

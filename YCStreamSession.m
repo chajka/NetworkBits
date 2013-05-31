@@ -34,8 +34,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 		canConnect = NO;
 		serverName = [server copy];
 		portNumber = port;
-		inputDelegator = self;
-		outputDelegator = self;
+		delegate = self;
 		readStream = NULL;
 		writeStream = NULL;
 		readStreamOptions = 0;
@@ -73,13 +72,9 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 	if (writeStream != NULL)
 		[self closeWriteStream];
 #if !__has_feature(objc_arc)
-	if ((inputDelegator != self) || (inputDelegator != nil))
-		[inputDelegator release];
-	if ((outputDelegator != self) || (inputDelegator != nil))
-		[outputDelegator release];
+	if (delegate != nil)		[delegate release];
 #endif
-	inputDelegator = nil;
-	outputDelegator = nil;
+	delegate = nil;
 #if !__has_feature(objc_arc)
 	[super dealloc];
 #endif
@@ -229,9 +224,9 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 		// create StreamClient context
 	CFStreamClientContext context =
 #if __has_feature(objc_arc)
-		{ 0, (__bridge void *)inputDelegator, NULL, NULL, NULL };
+		{ 0, (__bridge void *)delegate, NULL, NULL, NULL };
 #else
-		{ 0, (void *)inputDelegator, NULL, NULL, NULL };
+		{ 0, (void *)delegate, NULL, NULL, NULL };
 #endif
     if (!CFReadStreamSetClient(readStream, readStreamOptions, read_stream_callback, &context))
 	{		// check error
@@ -289,9 +284,9 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 		// create StreamClient context
 	CFStreamClientContext context =
 #if __has_feature(objc_arc)
-		{ 0, (__bridge void *)outputDelegator, NULL, NULL, NULL };
+		{ 0, (__bridge void *)delegate, NULL, NULL, NULL };
 #else
-		{ 0, outputDelegator, NULL, NULL, NULL };
+		{ 0, (void *)delegate, NULL, NULL, NULL };
 #endif
     if (!CFWriteStreamSetClient(writeStream, writeStreamOptions, write_stream_callback, &context))
 	{
@@ -345,79 +340,57 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 
 #pragma mark -
 #pragma mark delegator process methods
-#pragma mark accessor of inputStreamDelegate
-- (id <InputStreamSessionDelegate>) inputStreamDelegate
+#pragma mark accessor of StreamSessionDelegate
+- (id <YCStreamSessionDelegate>) delegate
 {
-	return inputDelegator;
+	return delegate;
 }// end nputStreamDelegate
 
-- (void) setInputStreamDelegate:(id <InputStreamSessionDelegate>)delegate
+- (void) setDelegate:(id <YCStreamSessionDelegate>)delegator
 {
 # if !__has_feature(objc_arc)
-		// check current delegate
-	if (inputDelegator != self)
-		[inputDelegator autorelease];
+		// check and release current delegate
+	if (delegate != self)
+		[delegate autorelease];
 	// end if
 #endif
 		// set delegate
-	inputDelegator = delegate;
+	delegate = delegator;
 #if !__has_feature(objc_arc)
-	[inputDelegator retain];
+	[delegate retain];
 #endif
 		// check have methods
-			// required methods
-	if ([inputDelegator respondsToSelector:@selector(iStreamHasBytesAvailable:)] == YES)
+			// required input stream methods
+	if ([delegate respondsToSelector:@selector(iStreamHasBytesAvailable:)] == YES)
 		readStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([inputDelegator respondsToSelector:@selector(iStreamEndEncounted:)] == YES)
+	if ([delegate respondsToSelector:@selector(iStreamEndEncounted:)] == YES)
 		readStreamOptions |= kCFStreamEventEndEncountered;
-	if ([inputDelegator respondsToSelector:@selector(iStreamErrorOccured:)] == YES)
+			// optional input stream methods
+			// !!!:FixIt
+	if ([delegate respondsToSelector:@selector(iStreamErrorOccured:)] == YES)
 		readStreamOptions |= kCFStreamEventErrorOccurred;
-			// optional methods
-	if ([inputDelegator respondsToSelector:@selector(iStreamOpenCompleted:)] == YES)
+	if ([delegate respondsToSelector:@selector(iStreamOpenCompleted:)] == YES)
 		readStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([inputDelegator respondsToSelector:@selector(iStreamCanAcceptBytes:)] == YES)
+	if ([delegate respondsToSelector:@selector(iStreamCanAcceptBytes:)] == YES)
 		readStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([inputDelegator respondsToSelector:@selector(iStreamNone:)] == YES)
+	if ([delegate respondsToSelector:@selector(iStreamNone:)] == YES)
 		readStreamOptions |= kCFStreamEventNone;
-
-}// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
-
-#pragma mark accessor of outputStreamDelegate
-- (id <OutputStreamSessionDelegate>) outputStreamDelegate
-{
-	return outputDelegator;
-}// end nputStreamDelegate
-
-- (void) setOutputStreamDelegate:(id <OutputStreamSessionDelegate>)delegate
-{
-# if !__has_feature(objc_arc)
-		// check current delegate
-	if (outputDelegator != self)
-		[outputDelegator autorelease];
-		// end if
-#endif
-		// set delegate
-	outputDelegator = delegate;
-#if !__has_feature(objc_arc)
-	[outputDelegator retain];
-#endif
-		// check have methods
-			// required methods
-	if ([outputDelegator respondsToSelector:@selector(oStreamCanAcceptBytes:)] == YES)
+			// required output stream methods
+	if ([delegate respondsToSelector:@selector(oStreamCanAcceptBytes:)] == YES)
 		writeStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([outputDelegator respondsToSelector:@selector(oStreamEndEncounted:)] == YES)
+	if ([delegate respondsToSelector:@selector(oStreamEndEncounted:)] == YES)
 		writeStreamOptions |= kCFStreamEventEndEncountered;
-	if ([outputDelegator respondsToSelector:@selector(oStreamErrorOccured:)] == YES)
+			// optional output stream methods
+			// !!!:FixIt
+	if ([delegate respondsToSelector:@selector(oStreamErrorOccured:)] == YES)
 		writeStreamOptions |= kCFStreamEventErrorOccurred;
-			// optional methods
-	if ([outputDelegator respondsToSelector:@selector(oStreamOpenCompleted:)] == YES)
+	if ([delegate respondsToSelector:@selector(oStreamOpenCompleted:)] == YES)
 		writeStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([outputDelegator respondsToSelector:@selector(oStreamHasBytesAvailable:)] == YES)
+	if ([delegate respondsToSelector:@selector(oStreamHasBytesAvailable:)] == YES)
 		writeStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([outputDelegator respondsToSelector:@selector(oStreamNone:)] == YES)
+	if ([delegate respondsToSelector:@selector(oStreamNone:)] == YES)
 		writeStreamOptions |= kCFStreamEventNone;
-	
-}// end - (void) setOutputStreamDelegate:(id <OutputStreamSessionDelegate>)delegate
+}// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
 
 #pragma mark -
 #pragma mark delegator methods
