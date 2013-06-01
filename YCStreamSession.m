@@ -9,7 +9,10 @@
 #import "YCStreamSession.h"
 #import <CoreFoundation/CoreFoundation.h>
 
-@interface YCStreamSession (private)
+@interface YCStreamSession ()
+- (void) initializeMembers:(NSString *)host port:(int)port;
+- (BOOL) initializeHost;
+
 - (void) setupReadStream;
 - (void) runReadStream;
 - (void) cleanupReadStream;
@@ -22,48 +25,32 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 @end
 
 @implementation YCStreamSession
-@synthesize serverName;
+@synthesize hostName;
 @synthesize portNumber;
 	//
 #pragma mark construct / destruct
-- (id) initWithServerName:(NSString *)server andPort:(int)port
+- (id) initWithHostName:(NSString *)host andPort:(int)port
 {
 	self = [super init];
 	if (self)
 	{
-		canConnect = NO;
-		serverName = [server copy];
-		portNumber = port;
-		delegate = self;
-		readStream = NULL;
-		writeStream = NULL;
-		readStreamOptions = 0;
-		writeStreamOptions = 0;
-		readStreamIsSetuped = NO;
-		writeStreamIsSetuped = NO;
-			// create CFHostRef from server and port
-#if __has_feature(objc_arc)
-		CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)serverName);
-#else
-		CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (CFStringRef)serverName);
-#endif
-			// allocate target host/port’s read & write stream
-		CFStreamCreatePairWithSocketToCFHost(
-			kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
-		CFRelease(host);
-		if ((readStream == NULL) || (writeStream == NULL))
-		{
-			if (readStream != NULL)		CFRelease(readStream);
-			if (writeStream != NULL)	CFRelease(writeStream);
-#if !__has_feature(objc_arc)
-			[serverName release];
-#endif
-			return nil;
-		}// end if create stream was failed
+		[self initializeMembers:host port:port];
 	}// end if self can allocate
 
 	return self;
-}// end - (id) initWithServerName:(NSString *)server andPort:(NSUInteger)port
+}// end - (id) initWithhostName:(NSString *)server andPort:(NSUInteger)port
+
+- (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
+{
+	self = [super init];
+	if (self)
+	{
+		[self initializeMembers:host port:port];
+		
+	}// end if self can allocate
+	
+	return self;
+}// - (id) initWithServerName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
 
 - (void) dealloc
 {
@@ -217,6 +204,51 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 }// end - (void) closeWriteStream
 
 #pragma mark - internal
+- (void) initializeMembers:(NSString *)host port:(int)port
+{
+	hostName = [host copy];
+	portNumber = port;
+	canConnect = NO;
+
+	delegate = self;
+
+	readStream = NULL;
+	writeStream = NULL;
+	readStreamOptions = 0;
+	writeStreamOptions = 0;
+	readStreamIsSetuped = NO;
+	writeStreamIsSetuped = NO;
+
+	hostRef = NULL;
+
+	targetThread = nil;
+}// end - (void) initializeMembers
+
+- (BOOL) initializeHost
+{
+		// create CFHostRef from server and port
+#if __has_feature(objc_arc)
+	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostName);
+#else
+	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (CFStringRef)hostName);
+#endif
+		// allocate target host/port’s read & write stream
+	CFStreamCreatePairWithSocketToCFHost(
+										 kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
+	CFRelease(host);
+	if ((readStream == NULL) || (writeStream == NULL))
+	{
+		if (readStream != NULL)		CFRelease(readStream);
+		if (writeStream != NULL)	CFRelease(writeStream);
+#if !__has_feature(objc_arc)
+		[hostName release];
+#endif
+		return NO;
+	}// end if create stream was failed
+
+	return YES;
+}// end - (BOOL) initializeHost
+
 #pragma mark Read Stream
 - (void) setupReadStream
 {		// set property of read stream
