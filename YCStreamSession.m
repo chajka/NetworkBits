@@ -20,8 +20,8 @@
 - (void) runWriteStream;
 - (void) cleanupWriteStream;
 
-static void read_stream_callback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info);
-static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
+static void ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info);
+static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
 @end
 
 @implementation YCStreamSession
@@ -265,7 +265,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #else
 		{ 0, (void *)delegate, NULL, NULL, NULL };
 #endif
-    if (!CFReadStreamSetClient(readStream, readStreamOptions, read_stream_callback, &context))
+    if (!CFReadStreamSetClient(readStream, readStreamOptions, ReadStreamCallback, &context))
 	{		// check error
 #if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
 		__autoreleasing
@@ -325,7 +325,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #else
 		{ 0, (void *)delegate, NULL, NULL, NULL };
 #endif
-    if (!CFWriteStreamSetClient(writeStream, writeStreamOptions, write_stream_callback, &context))
+    if (!CFWriteStreamSetClient(writeStream, writeStreamOptions, WriteStreamCallback, &context))
 	{
 #if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_5
 		__autoreleasing
@@ -484,7 +484,7 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 #pragma mark - Core Foundation part
 #pragma mark callback for read stream
 static void
-read_stream_callback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info)
+ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info)
 {
 #if __has_feature(objc_arc)
 	id iDelegator = (__bridge id)info;
@@ -514,11 +514,11 @@ read_stream_callback(CFReadStreamRef iStream, CFStreamEventType eventType, void*
 		default:
 			break;
     }// end swith read stream event
-}// end read_stream_callback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
+}// end ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info)
 
 #pragma mark callback for write stream
 static void
-write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, void* info)
+WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info)
 {
 #if __has_feature(objc_arc)
 	id oDelegator = (__bridge id)info;
@@ -548,6 +548,6 @@ write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType eventType, voi
 		default:
 			break;
     }// end switch write stream event
-}// end read_stream_callback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
+}// end WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info)
 
 @end
