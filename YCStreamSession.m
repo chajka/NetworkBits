@@ -80,6 +80,11 @@ static void write_stream_callback(CFWriteStreamRef oStream, CFStreamEventType ev
 
 #pragma mark -
 #pragma mark accessor
+- (YCStreamDirection) direction	{	return direction;	}
+- (void) setDirection:(YCStreamDirection)newDirection
+{
+	
+}// end - (void) setDirection:(YCStreamDirection)newDirection
 - (NSInputStream *) readStream
 {
 #if __has_feature(objc_arc)

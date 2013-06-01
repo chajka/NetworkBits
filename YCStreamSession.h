@@ -36,11 +36,19 @@
 - (void) oStreamNone:(NSOutputStream *)oStream;
 @end
 
+typedef NSUInteger YCStreamDirection;
+enum YCStreamDirection {
+	YCStreamDirectionReadOnly = 1,
+	YCStreamDirectionWriteOnly,
+	YCStreamDirectionBoth
+};
+
 @interface YCStreamSession : NSObject <YCStreamSessionDelegate> {
 		// connection specific variables
 	NSString						*hostName;
 	int								portNumber;
 	BOOL							canConnect;
+	YCStreamDirection				direction;
 		// process stream specific variables
 	id <YCStreamSessionDelegate>	delegate;
 		// stream specific variables
