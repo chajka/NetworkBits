@@ -265,6 +265,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (BOOL) initializeHost
 {
+	BOOL success = NO;
 		// create CFHostRef from server and port
 #if __has_feature(objc_arc)
 	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostName);
@@ -274,13 +275,51 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		// allocate target host/port’s read & write stream
 	CFStreamCreatePairWithSocketToCFHost(kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
 	CFRelease(host);
-	hostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
-	if ((readStream == NULL) || (writeStream == NULL) || (hostRef == NULL))
+	if ((readStream != NULL) && (writeStream != NULL))
+		@try {
+			[self setupReadStream];
+			[self setupWriteStream];
+		}
+		@catch (NSError *err) {
+			CFRelease(readStream);
+			CFRelease(writeStream);
+			success = NO;
+#if !__has_feature(objc_arc)
+			[hostName release];
+#endif
+			hostName = nil;
+
+			return NO;
+		}// end try-catch
+	// end if create read / write stream
+
+	if ((readStream == NULL) || (writeStream == NULL))
 	{
 		if (readStream != NULL)		CFRelease(readStream);
 		readStream = NULL;
 		if (writeStream != NULL)	CFRelease(writeStream);
 		writeStream = NULL;
+#if !__has_feature(objc_arc)
+		[hostName release];
+#endif
+		hostName = nil;
+		
+		return NO;
+	}// end if create stream was failed
+
+#if __has_feature(objc_arc)
+	SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
+#else
+	SCNetworkReachabilityContext context = { 0, (void *)self, NULL, NULL, NULL };
+#endif
+	hostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
+	if (hostRef != NULL)
+		if (SCNetworkReachabilitySetCallback(hostRef, NetworkReachabilityCallBack, &context) == true)
+			success = YES;
+	// end if hostref
+
+	if ((hostRef == NULL) || (success == NO))
+	{
 		if (hostRef != NULL)		CFRelease(hostRef);
 		hostRef = NULL;
 #if !__has_feature(objc_arc)
