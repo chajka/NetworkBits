@@ -32,8 +32,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 @end
 
 @implementation YCStreamSession
-@synthesize hostName;
-@synthesize portNumber;
+@synthesize	hostName;
+@synthesize	portNumber;
+@synthesize	direction;
 	//
 #pragma mark construct / destruct
 - (id) initWithHostName:(NSString *)host andPort:(int)port
@@ -102,13 +103,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 #pragma mark -
 #pragma mark accessor
-- (YCStreamDirection) direction	{	return direction;	}
-- (void) setDirection:(YCStreamDirection)newDirection
 - (NSTimeInterval) timeout {	return timeout;	}
 - (void) setTimeout:(NSTimeInterval)newTimeout
 {
-	
-}// end - (void) setDirection:(YCStreamDirection)newDirection
 	timeout = newTimeout;
 }// end - (void) setTimeout:(NSTimeInterval)newTimeout
 

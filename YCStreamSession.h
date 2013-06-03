@@ -71,6 +71,7 @@ enum YCStreamDirection {
 }
 @property (readonly) NSString		*hostName;
 @property (readonly) int			portNumber;
+@property (assign, readwrite) YCStreamDirection direction;
 @property (readonly) NSInputStream	*readStream;
 @property (readonly) NSOutputStream	*writeStream;
 #if __has_feature(objc_arc)
