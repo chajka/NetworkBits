@@ -42,6 +42,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if (self)
 	{
 		[self initializeMembers:host port:port];
+		if ([self initializeHost] == NO)
+			return nil;
+		// end if initialize host is fail
+
+		targetThread = [NSThread mainThread];
+#if !__has_feature(objc_arc)
+		[targetThread retain];
+#endif
 	}// end if self can allocate
 
 	return self;
@@ -53,11 +61,18 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if (self)
 	{
 		[self initializeMembers:host port:port];
-		
+		if ([self initializeHost] == NO)
+			return nil;
+		// end if initialize host is fail
+
+		targetThread = thread;
+#if !__has_feature(objc_arc)
+		[targetThread retain];
+#endif
 	}// end if self can allocate
 	
 	return self;
-}// - (id) initWithServerName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
+}// end - (id) initWithServerName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
 
 - (void) dealloc
 {
