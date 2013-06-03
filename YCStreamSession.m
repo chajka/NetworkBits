@@ -81,13 +81,16 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if (writeStream != NULL)	[self closeWriteStream];
 	if (hostRef != NULL)		CFRelease(hostRef);
 	hostRef = NULL;
-	if (delegate != nil)		[delegate release];
-#endif
+#if __has_feature(objc_arc)
 	delegate = nil;
-#if !__has_feature(objc_arc)
+#else
+	if (targetThread != nil)	[targetThread release];
+	if (delegate != nil)		[delegate release];
+	delegate = nil;
+
 	[super dealloc];
 #endif
-}
+}// end - (void) dealloc
 
 #if __OBJC_GC__
 - (void) finalize
@@ -98,11 +101,10 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	hostRef = NULL;
 
 	[super finalize];
-}
+}// end - (void) finalize
 #endif
 
-#pragma mark -
-#pragma mark accessor
+#pragma mark - accessor
 - (NSTimeInterval) timeout {	return timeout;	}
 - (void) setTimeout:(NSTimeInterval)newTimeout
 {
@@ -134,6 +136,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	[self validateReachabilityAsync];
 }// end - (void) checkReadyToConnect
 
+- (BOOL) connect
 {
 	@try {
 		[self setupReadStream];
@@ -149,12 +152,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		CFRelease(writeStream);		writeStream = NULL;
 		canConnect = NO;
 	}// end try - catch setup read and write streams
-- (BOOL) connect
-{
+	
 	if (canConnect == NO)
-		if ([self checkReadyToConnect] == NO)
-			return NO;
-		// end if check i/o stream
+		return NO;
 	// end check ready to connect
 
 	BOOL success = YES;
@@ -232,6 +232,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	// end close write stream
 }// end - (void) closeWriteStream
 
+- (void) terminate
+{
+	
+}// end - (void) terminate
+
 #pragma mark - internal
 - (void) initializeMembers:(NSString *)host port:(int)port
 {
@@ -247,6 +252,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	writeStreamOptions = 0;
 	readStreamIsSetuped = NO;
 	writeStreamIsSetuped = NO;
+	mustHandleReadStreamError = YES;
+	mustHandleWriteStreamError = YES;
 
 	reachabilityValidating = NO;
 		// create SCNetworkReachabilityRef
@@ -279,13 +286,15 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #if !__has_feature(objc_arc)
 		[hostName release];
 #endif
+		hostName = nil;
+
 		return NO;
 	}// end if create stream was failed
 
 	return YES;
 }// end - (BOOL) initializeHost
 
-#pragma mark - Reachablity
+#pragma mark - reachablity
 - (void) validateReachabilityAsync
 {
 #if __has_feature(objc_arc)
@@ -305,7 +314,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	}// end if run reachability
 }// end - (void) validateReachabilityAsync
 
-#pragma mark Read Stream
+#pragma mark - read Stream
 - (void) setupReadStream
 {		// set property of read stream
 	CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
@@ -365,7 +374,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	readStream = NULL;
 }// end - (void) releaeReadStream
 
-#pragma mark Write Stream
+#pragma mark - write Stream
 - (void) setupWriteStream
 {		// set property of write stream
 	CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket, kCFBooleanTrue);
@@ -449,9 +458,18 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	reachabilityValidating = NO;
 }// end - (void) unscheduleReachability
 
-#pragma mark -
-#pragma mark delegator process methods
-#pragma mark accessor of StreamSessionDelegate
+#pragma mark - delegator process methods
+- (void) streamIsDisconnected:(YCStreamSession *)session
+{
+	
+}// end - (void) streamIsDisconnected:(YCStreamSession *)session
+
+- (void) streamCanRestart:(YCStreamSession *)session
+{
+	
+}// end - (void) streamCanRestart:(YCStreamSession *)session
+
+#pragma mark - accessor of StreamSessionDelegate
 - (id <YCStreamSessionDelegate>) delegate
 {
 	return delegate;
@@ -504,8 +522,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 }// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
 
-#pragma mark -
-#pragma mark delegator methods
+#pragma mark - delegator methods
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
 {
 	if (targetThread == nil)
@@ -516,7 +533,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	[delegate streamReadyToConnect:self reachable:reachable];
 }// end - (void) streamReadyToConnect:(YCStreamSession *)session
 
-#pragma mark InputStreamSessionDelegate methods
+#pragma mark - delegate methods for input stream
 - (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
 {
 }// end - (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
@@ -541,7 +558,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 }// end - (void) readStreamNone:(NSStream *)readStream
 
-#pragma mark OutputStreamSessionDelegate methods
+#pragma mark - delegate methods for output stream
 - (void) writeStreamCanAcceptBytes:(NSOutputStream *)writeStream
 {
 }// end - (void) writeStreamCanAcceptBytes:(NSInputStream *)writeStream
@@ -567,7 +584,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 }// end - (void) writeStreamNone:(NSStream *)writeStream
 
 #pragma mark - Core Foundation part
-#pragma mark callback for read stream
+#pragma mark - callback for read stream
 static void
 ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 {
@@ -601,7 +618,7 @@ ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void
     }// end swith read stream event
 }// end ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 
-#pragma mark callback for write stream
+#pragma mark - callback for write stream
 static void
 WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info)
 {

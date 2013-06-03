@@ -62,6 +62,8 @@ enum YCStreamDirection {
 	CFOptionFlags					writeStreamOptions;
 	BOOL							readStreamIsSetuped;
 	BOOL							writeStreamIsSetuped;
+	BOOL							mustHandleReadStreamError;
+	BOOL							mustHandleWriteStreamError;
 		// manage connection reachable
 	BOOL							reachabilityValidating;
 	SCNetworkReachabilityRef		hostRef;
@@ -87,10 +89,13 @@ enum YCStreamDirection {
 	// connection
 - (void) checkReadyToConnect;
 - (BOOL) connect;
-- (void) disconnect;
+	// read stream control
 - (BOOL) reconnectReadStream;
 - (void) closeReadStream;
+	// write stream control
 - (BOOL) reconnectWriteStream;
 - (void) closeWriteStream;
-
+	// stop session
+- (void) disconnect;
+- (void) terminate;
 @end
