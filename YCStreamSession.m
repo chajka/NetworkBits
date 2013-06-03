@@ -9,9 +9,15 @@
 #import "YCStreamSession.h"
 #import <CoreFoundation/CoreFoundation.h>
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_5
+typedef	uint32_t	SCNetworkReachabilityFlags;
+#endif
+
 @interface YCStreamSession ()
 - (void) initializeMembers:(NSString *)host port:(int)port;
 - (BOOL) initializeHost;
+
+- (void) validateReachabilityAsync;
 
 - (void) setupReadStream;
 - (void) runReadStream;
@@ -59,6 +65,8 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 	if (writeStream != NULL)
 		[self closeWriteStream];
 #if !__has_feature(objc_arc)
+	if (hostRef != NULL)		CFRelease(hostRef);
+	hostRef = NULL;
 	if (delegate != nil)		[delegate release];
 #endif
 	delegate = nil;
@@ -74,6 +82,9 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 		[self closeReadStream];
 	if (writeStream != NULL)
 		[self closeWriteStream];
+	if (hostRef != NULL)		CFRelease(hostRef);
+	hostRef = NULL;
+
 	[super finalize];
 }
 #endif
@@ -82,9 +93,14 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 #pragma mark accessor
 - (YCStreamDirection) direction	{	return direction;	}
 - (void) setDirection:(YCStreamDirection)newDirection
+- (NSTimeInterval) timeout {	return timeout;	}
+- (void) setTimeout:(NSTimeInterval)newTimeout
 {
 	
 }// end - (void) setDirection:(YCStreamDirection)newDirection
+	timeout = newTimeout;
+}// end - (void) setTimeout:(NSTimeInterval)newTimeout
+
 - (NSInputStream *) readStream
 {
 #if __has_feature(objc_arc)
@@ -105,7 +121,11 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 
 #pragma mark -
 #pragma mark action
-- (BOOL) checkReadyToConnect
+- (void) checkReadyToConnect
+{
+	[self validateReachabilityAsync];
+}// end - (void) checkReadyToConnect
+
 {
 	@try {
 		[self setupReadStream];
@@ -121,10 +141,6 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 		CFRelease(writeStream);		writeStream = NULL;
 		canConnect = NO;
 	}// end try - catch setup read and write streams
-
-	return canConnect;
-}// end - (BOOL) readyToConnect
-
 - (BOOL) connect
 {
 	if (canConnect == NO)
@@ -224,7 +240,10 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 	readStreamIsSetuped = NO;
 	writeStreamIsSetuped = NO;
 
+	reachabilityValidating = NO;
+		// create SCNetworkReachabilityRef
 	hostRef = NULL;
+	timeout = 0;
 
 	targetThread = nil;
 }// end - (void) initializeMembers
@@ -242,9 +261,13 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 										 kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
 	CFRelease(host);
 	if ((readStream == NULL) || (writeStream == NULL))
+	hostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
+	if ((readStream == NULL) || (writeStream == NULL) || (hostRef == NULL))
 	{
 		if (readStream != NULL)		CFRelease(readStream);
 		if (writeStream != NULL)	CFRelease(writeStream);
+		if (hostRef != NULL)		CFRelease(hostRef);
+		hostRef = NULL;
 #if !__has_feature(objc_arc)
 		[hostName release];
 #endif
@@ -253,6 +276,26 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 
 	return YES;
 }// end - (BOOL) initializeHost
+
+#pragma mark - Reachablity
+- (void) validateReachabilityAsync
+{
+#if __has_feature(objc_arc)
+	SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
+#else
+	SCNetworkReachabilityContext context = { 0, (void *)self, NULL, NULL, NULL };
+#endif
+	if (SCNetworkReachabilitySetCallback(hostRef, NetworkReachabilityCallBack, &context) == true)
+	{		//
+		if (targetThread == nil)
+			[self scheduleReachability];
+		else
+			[self performSelector:@selector(scheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+			// start timer if timeout is limited
+		if (timeout != 0)
+			[NSTimer scheduledTimerWithTimeInterval:timeout target:self selector:@selector(timeoutReachability:) userInfo:nil repeats:NO];
+	}// end if run reachability
+}// end - (void) validateReachabilityAsync
 
 #pragma mark Read Stream
 - (void) setupReadStream
@@ -375,6 +418,29 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 	writeStream = NULL;
 }// end - (void) releaeReadStream
 
+#pragma mark - handle reachability
+- (void) timeoutReachability:(NSTimer *)timer
+{
+	if (targetThread == nil)
+		[self unscheduleReachability];
+	else
+		[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+
+	[self streamReadyToConnect:self reachable:NO];
+}// end - (void) timeoutReachability:(NSTimer *)timer
+
+- (void) scheduleReachability
+{
+	reachabilityValidating = YES;
+	SCNetworkReachabilityScheduleWithRunLoop(hostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+}// end - (void) scheduleReachability
+
+- (void) unscheduleReachability
+{
+	SCNetworkReachabilityUnscheduleFromRunLoop(hostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+	reachabilityValidating = NO;
+}// end - (void) unscheduleReachability
+
 #pragma mark -
 #pragma mark delegator process methods
 #pragma mark accessor of StreamSessionDelegate
@@ -431,6 +497,16 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 
 #pragma mark -
 #pragma mark delegator methods
+- (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
+{
+	if (targetThread == nil)
+		[self unscheduleReachability];
+	else
+		[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+
+	[delegate streamReadyToConnect:self reachable:reachable];
+}// end - (void) streamReadyToConnect:(YCStreamSession *)session
+
 #pragma mark InputStreamSessionDelegate methods
 - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream
 {
@@ -549,5 +625,20 @@ WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void 
 			break;
     }// end switch write stream event
 }// end WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info)
+
+#pragma mark - callback for network reachability
+static void
+NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info)
+{
+#if __has_feature(objc_arc)
+	YCStreamSession *mySelf = (__bridge YCStreamSession *)info;
+#else
+	YCStreamSession *mySelf = (YCStreamSession *)info;
+#endif
+	if (flags != 0)
+		[mySelf streamReadyToConnect:mySelf reachable:YES];
+	else
+		[mySelf streamReadyToConnect:mySelf reachable:NO];
+}// end NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info);
 
 @end

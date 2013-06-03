@@ -76,7 +76,8 @@ enum YCStreamDirection {
 - (id) initWithHostName:(NSString *)host andPort:(int)port;
 - (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread;
 
-- (BOOL) checkReadyToConnect;
+	// connection
+- (void) checkReadyToConnect;
 - (BOOL) connect;
 - (void) disconnect;
 - (BOOL) reconnectReadStream;
