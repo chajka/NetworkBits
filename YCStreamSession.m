@@ -684,10 +684,8 @@ NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabili
 #else
 	YCStreamSession *mySelf = (YCStreamSession *)info;
 #endif
-	if (flags != 0)
-		[mySelf streamReadyToConnect:mySelf reachable:YES];
-	else
-		[mySelf streamReadyToConnect:mySelf reachable:NO];
+	BOOL reachable = (flags != 0) ? YES : NO;
+	[mySelf streamReadyToConnect:mySelf reachable:reachable];
 }// end NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info);
 
 @end
