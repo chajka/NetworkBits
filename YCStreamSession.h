@@ -14,26 +14,30 @@
 #define ReadStreamSetupError		@"ReadStreamSetupError"
 #define WriteStreamSetupError		@"WriteStreamSetupError"
 
+@class YCStreamSession;
 @protocol YCStreamSessionDelegate <NSObject>
 @required
+	// process common event
+- (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable;
 	// process input stream
-- (void) iStreamHasBytesAvailable:(NSInputStream *)iStream;
-- (void) iStreamEndEncounted:(NSInputStream *)iStream;
+- (void) readStreamHasBytesAvailable:(NSInputStream *)readStream;
+- (void) readStreamEndEncounted:(NSInputStream *)readStream;
 	// process output stream
-- (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream;
-- (void) oStreamEndEncounted:(NSOutputStream *)oStream;
+- (void) writeStreamCanAcceptBytes:(NSOutputStream *)writeStream;
+- (void) writeStreamEndEncounted:(NSOutputStream *)writeStream;
 @optional
 	// process common event
+- (void) streamIsDisconnected:(YCStreamSession *)session;
 	// process for input stream
-- (void) iStreamErrorOccured:(NSInputStream *)iStream;
-- (void) iStreamOpenCompleted:(NSInputStream *)iStream;
-- (void) iStreamCanAcceptBytes:(NSInputStream *)iStream;
-- (void) iStreamNone:(NSStream *)iStream;
+- (void) readStreamErrorOccured:(NSInputStream *)readStream;
+- (void) readStreamOpenCompleted:(NSInputStream *)readStream;
+- (void) readStreamCanAcceptBytes:(NSInputStream *)readStream;
+- (void) readStreamNone:(NSStream *)readStream;
 	// process for output stream
-- (void) oStreamErrorOccured:(NSOutputStream *)oStream;
-- (void) oStreamOpenCompleted:(NSOutputStream *)oStream;
-- (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream;
-- (void) oStreamNone:(NSOutputStream *)oStream;
+- (void) writeStreamErrorOccured:(NSOutputStream *)writeStream;
+- (void) writeStreamOpenCompleted:(NSOutputStream *)writeStream;
+- (void) writeStreamHasBytesAvailable:(NSOutputStream *)writeStream;
+- (void) writeStreamNone:(NSOutputStream *)writeStream;
 @end
 
 typedef NSUInteger YCStreamDirection;
