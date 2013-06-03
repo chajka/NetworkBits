@@ -78,6 +78,7 @@ enum YCStreamDirection {
 #else
 @property (retain, readwrite) id <YCStreamSessionDelegate> delegate;
 #endif
+@property (assign, readwrite) NSTimeInterval timeout;
 
 - (id) initWithHostName:(NSString *)host andPort:(int)port;
 - (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread;
