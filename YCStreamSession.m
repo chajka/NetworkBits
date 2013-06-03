@@ -335,22 +335,12 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 #pragma mark - reachablity
 - (void) validateReachabilityAsync
-{
-#if __has_feature(objc_arc)
-	SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
-#else
-	SCNetworkReachabilityContext context = { 0, (void *)self, NULL, NULL, NULL };
-#endif
-	if (SCNetworkReachabilitySetCallback(hostRef, NetworkReachabilityCallBack, &context) == true)
-	{		//
-		if (targetThread == nil)
-			[self scheduleReachability];
-		else
-			[self performSelector:@selector(scheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
-			// start timer if timeout is limited
-		if (timeout != 0)
-			[NSTimer scheduledTimerWithTimeInterval:timeout target:self selector:@selector(timeoutReachability:) userInfo:nil repeats:NO];
-	}// end if run reachability
+{		//
+	[self performSelector:@selector(scheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+
+		// start timer if timeout is limited
+	if (timeout != 0)
+		[NSTimer scheduledTimerWithTimeInterval:timeout target:self selector:@selector(timeoutReachability:) userInfo:nil repeats:NO];
 }// end - (void) validateReachabilityAsync
 
 #pragma mark - read Stream
@@ -477,10 +467,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #pragma mark - handle reachability
 - (void) timeoutReachability:(NSTimer *)timer
 {
-	if (targetThread == nil)
-		[self unscheduleReachability];
-	else
-		[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+	[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
 
 	[self streamReadyToConnect:self reachable:NO];
 }// end - (void) timeoutReachability:(NSTimer *)timer
@@ -564,10 +551,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #pragma mark - delegator methods
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
 {
-	if (targetThread == nil)
-		[self unscheduleReachability];
-	else
-		[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+	[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
 
 	[delegate streamReadyToConnect:self reachable:reachable];
 }// end - (void) streamReadyToConnect:(YCStreamSession *)session
