@@ -63,7 +63,9 @@ enum YCStreamDirection {
 	BOOL							readStreamIsSetuped;
 	BOOL							writeStreamIsSetuped;
 		// manage connection reachable
+	BOOL							reachabilityValidating;
 	SCNetworkReachabilityRef		hostRef;
+	NSTimeInterval					timeout;
 		// threading
 	NSThread						*targetThread;
 }
