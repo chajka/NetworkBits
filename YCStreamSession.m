@@ -26,8 +26,9 @@ typedef	uint32_t	SCNetworkReachabilityFlags;
 - (void) runWriteStream;
 - (void) cleanupWriteStream;
 
-static void ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info);
-static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info);
+static void ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info);
+static void WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info);
+static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info);
 @end
 
 @implementation YCStreamSession
@@ -60,11 +61,8 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 
 - (void) dealloc
 {
-	if (readStream != NULL)
-		[self closeReadStream];
-	if (writeStream != NULL)
-		[self closeWriteStream];
-#if !__has_feature(objc_arc)
+	if (readStream != NULL)		[self closeReadStream];
+	if (writeStream != NULL)	[self closeWriteStream];
 	if (hostRef != NULL)		CFRelease(hostRef);
 	hostRef = NULL;
 	if (delegate != nil)		[delegate release];
@@ -78,10 +76,8 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 #if __OBJC_GC__
 - (void) finalize
 {
-	if (readStream != NULL)
-		[self closeReadStream];
-	if (writeStream != NULL)
-		[self closeWriteStream];
+	if (readStream != NULL)		[self closeReadStream];
+	if (writeStream != NULL)	[self closeWriteStream];
 	if (hostRef != NULL)		CFRelease(hostRef);
 	hostRef = NULL;
 
@@ -257,15 +253,15 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (CFStringRef)hostName);
 #endif
 		// allocate target host/port’s read & write stream
-	CFStreamCreatePairWithSocketToCFHost(
-										 kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
+	CFStreamCreatePairWithSocketToCFHost(kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
 	CFRelease(host);
-	if ((readStream == NULL) || (writeStream == NULL))
 	hostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
 	if ((readStream == NULL) || (writeStream == NULL) || (hostRef == NULL))
 	{
 		if (readStream != NULL)		CFRelease(readStream);
+		readStream = NULL;
 		if (writeStream != NULL)	CFRelease(writeStream);
+		writeStream = NULL;
 		if (hostRef != NULL)		CFRelease(hostRef);
 		hostRef = NULL;
 #if !__has_feature(objc_arc)
@@ -464,35 +460,36 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 #endif
 		// check have methods
 			// required input stream methods
-	if ([delegate respondsToSelector:@selector(iStreamHasBytesAvailable:)] == YES)
+	if ([delegate respondsToSelector:@selector(readStreamHasBytesAvailable:)] == YES)
 		readStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([delegate respondsToSelector:@selector(iStreamEndEncounted:)] == YES)
+	if ([delegate respondsToSelector:@selector(readStreamEndEncounted:)] == YES)
 		readStreamOptions |= kCFStreamEventEndEncountered;
 			// optional input stream methods
-			// !!!:FixIt
-	if ([delegate respondsToSelector:@selector(iStreamErrorOccured:)] == YES)
-		readStreamOptions |= kCFStreamEventErrorOccurred;
-	if ([delegate respondsToSelector:@selector(iStreamOpenCompleted:)] == YES)
+	readStreamOptions |= kCFStreamEventErrorOccurred;
+	if ([delegate respondsToSelector:@selector(readStreamErrorOccured:)] == YES)
+		mustHandleReadStreamError = NO;
+	if ([delegate respondsToSelector:@selector(readStreamOpenCompleted:)] == YES)
 		readStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([delegate respondsToSelector:@selector(iStreamCanAcceptBytes:)] == YES)
+	if ([delegate respondsToSelector:@selector(readStreamCanAcceptBytes:)] == YES)
 		readStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([delegate respondsToSelector:@selector(iStreamNone:)] == YES)
+	if ([delegate respondsToSelector:@selector(readStreamNone:)] == YES)
 		readStreamOptions |= kCFStreamEventNone;
 			// required output stream methods
-	if ([delegate respondsToSelector:@selector(oStreamCanAcceptBytes:)] == YES)
+	if ([delegate respondsToSelector:@selector(writeStreamCanAcceptBytes:)] == YES)
 		writeStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([delegate respondsToSelector:@selector(oStreamEndEncounted:)] == YES)
+	if ([delegate respondsToSelector:@selector(writeStreamEndEncounted:)] == YES)
 		writeStreamOptions |= kCFStreamEventEndEncountered;
 			// optional output stream methods
-			// !!!:FixIt
-	if ([delegate respondsToSelector:@selector(oStreamErrorOccured:)] == YES)
-		writeStreamOptions |= kCFStreamEventErrorOccurred;
-	if ([delegate respondsToSelector:@selector(oStreamOpenCompleted:)] == YES)
+	writeStreamOptions |= kCFStreamEventErrorOccurred;
+	if ([delegate respondsToSelector:@selector(writeStreamErrorOccured:)] == YES)
+		mustHandleReadStreamError = NO;
+	if ([delegate respondsToSelector:@selector(writeStreamOpenCompleted:)] == YES)
 		writeStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([delegate respondsToSelector:@selector(oStreamHasBytesAvailable:)] == YES)
+	if ([delegate respondsToSelector:@selector(writeStreamHasBytesAvailable:)] == YES)
 		writeStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([delegate respondsToSelector:@selector(oStreamNone:)] == YES)
+	if ([delegate respondsToSelector:@selector(writeStreamNone:)] == YES)
 		writeStreamOptions |= kCFStreamEventNone;
+
 }// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
 
 #pragma mark -
@@ -508,123 +505,123 @@ static void WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType even
 }// end - (void) streamReadyToConnect:(YCStreamSession *)session
 
 #pragma mark InputStreamSessionDelegate methods
-- (void) iStreamHasBytesAvailable:(NSInputStream *)iStream
+- (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
 {
-}// end - (void) iStreamHasBytesAvailable:(NSInputStream *)iStream
+}// end - (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
 
-- (void) iStreamEndEncounted:(NSInputStream *)iStream
+- (void) readStreamEndEncounted:(NSInputStream *)readStream
 {
-}// end - (void) iStreamEndEncounted:(NSStream *)iStream
+}// end - (void) readStreamEndEncounted:(NSStream *)readStream
 
-- (void) iStreamErrorOccured:(NSInputStream *)iStream
+- (void) readStreamErrorOccured:(NSInputStream *)readStream
 {
-}// end - (void) iStreamErrorOccured:(NSInputStream *)iStream
+}// end - (void) readStreamErrorOccured:(NSInputStream *)readStream
 
-- (void) iStreamOpenCompleted:(NSInputStream *)iStream
+- (void) readStreamOpenCompleted:(NSInputStream *)readStream
 {
-}// end - (void) iStreamOpenCompleted:(NSInputStream *)iStream
+}// end - (void) readStreamOpenCompleted:(NSInputStream *)readStream
 
-- (void) iStreamCanAcceptBytes:(NSInputStream *)iStream
+- (void) readStreamCanAcceptBytes:(NSInputStream *)readStream
 {
-}// end - (void) iStreamCanAcceptBytes:(NSInputStream *)iStream
+}// end - (void) readStreamCanAcceptBytes:(NSInputStream *)readStream
 
-- (void) iStreamNone:(NSInputStream *)iStream
+- (void) readStreamNone:(NSInputStream *)readStream
 {
-}// end - (void) iStreamNone:(NSStream *)iStream
+}// end - (void) readStreamNone:(NSStream *)readStream
 
 #pragma mark OutputStreamSessionDelegate methods
-- (void) oStreamCanAcceptBytes:(NSOutputStream *)oStream
+- (void) writeStreamCanAcceptBytes:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamCanAcceptBytes:(NSInputStream *)oStream
+}// end - (void) writeStreamCanAcceptBytes:(NSInputStream *)writeStream
 
-- (void) oStreamEndEncounted:(NSOutputStream *)oStream
+- (void) writeStreamEndEncounted:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamEndEncounted:(NSStream *)oStream
+}// end - (void) writeStreamEndEncounted:(NSStream *)writeStream
 
-- (void) oStreamErrorOccured:(NSOutputStream *)oStream
+- (void) writeStreamErrorOccured:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamErrorOccured:(NSInputStream *)oStream
+}// end - (void) writeStreamErrorOccured:(NSInputStream *)writeStream
 
-- (void) oStreamOpenCompleted:(NSOutputStream *)oStream
+- (void) writeStreamOpenCompleted:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamOpenCompleted:(NSInputStream *)oStream
+}// end - (void) writeStreamOpenCompleted:(NSInputStream *)writeStream
 
-- (void) oStreamHasBytesAvailable:(NSOutputStream *)oStream
+- (void) writeStreamHasBytesAvailable:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamHasBytesAvailable:(NSInputStream *)oStream
+}// end - (void) writeStreamHasBytesAvailable:(NSInputStream *)writeStream
 
-- (void) oStreamNone:(NSOutputStream *)oStream
+- (void) writeStreamNone:(NSOutputStream *)writeStream
 {
-}// end - (void) oStreamNone:(NSStream *)oStream
+}// end - (void) writeStreamNone:(NSStream *)writeStream
 
 #pragma mark - Core Foundation part
 #pragma mark callback for read stream
 static void
-ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info)
+ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 {
 #if __has_feature(objc_arc)
 	id iDelegator = (__bridge id)info;
-	NSInputStream *rStream = (__bridge NSInputStream *)iStream;
+	NSInputStream *rStream = (__bridge NSInputStream *)readStream;
 #else
 	id iDelegator = (id)info;
-	NSInputStream *rStream = (NSInputStream *)iStream;
+	NSInputStream *rStream = (NSInputStream *)readStream;
 #endif
     switch (eventType) {
         case kCFStreamEventOpenCompleted:
-			[iDelegator iStreamOpenCompleted:rStream];
+			[iDelegator readStreamOpenCompleted:rStream];
             break;
         case kCFStreamEventHasBytesAvailable:
-			[iDelegator iStreamHasBytesAvailable:rStream];
+			[iDelegator readStreamHasBytesAvailable:rStream];
             break;
         case kCFStreamEventEndEncountered:
-			[iDelegator iStreamEndEncounted:rStream];
+			[iDelegator readStreamEndEncounted:rStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[iDelegator iStreamErrorOccured:rStream];
+			[iDelegator readStreamErrorOccured:rStream];
             break;
 		case kCFStreamEventCanAcceptBytes:
-			[iDelegator iStreamCanAcceptBytes:rStream];
+			[iDelegator readStreamCanAcceptBytes:rStream];
 			break;
 		case kCFStreamEventNone:
-			[iDelegator iStreamHasBytesAvailable:rStream];
+			[iDelegator readStreamHasBytesAvailable:rStream];
 		default:
 			break;
     }// end swith read stream event
-}// end ReadStreamCallback(CFReadStreamRef iStream, CFStreamEventType eventType, void* info)
+}// end ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 
 #pragma mark callback for write stream
 static void
-WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info)
+WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info)
 {
 #if __has_feature(objc_arc)
 	id oDelegator = (__bridge id)info;
-	NSOutputStream *wStream = (__bridge NSOutputStream *)oStream;
+	NSOutputStream *wStream = (__bridge NSOutputStream *)writeStream;
 #else
 	id oDelegator = (id)info;
-	NSOutputStream *wStream = (NSOutputStream *)oStream;
+	NSOutputStream *wStream = (NSOutputStream *)writeStream;
 #endif
     switch (eventType) {
         case kCFStreamEventOpenCompleted:
-			[oDelegator oStreamOpenCompleted:wStream];
+			[oDelegator writeStreamOpenCompleted:wStream];
             break;
 		case kCFStreamEventCanAcceptBytes:
-			[oDelegator oStreamCanAcceptBytes:wStream];
+			[oDelegator writeStreamCanAcceptBytes:wStream];
 			break;
         case kCFStreamEventEndEncountered:
-			[oDelegator oStreamEndEncounted:wStream];
+			[oDelegator writeStreamEndEncounted:wStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[oDelegator oStreamErrorOccured:wStream];
+			[oDelegator writeStreamErrorOccured:wStream];
             break;
         case kCFStreamEventHasBytesAvailable:
-			[oDelegator oStreamHasBytesAvailable:wStream];
+			[oDelegator writeStreamHasBytesAvailable:wStream];
             break;
 		case kCFStreamEventNone:
-			[oDelegator oStreamHasBytesAvailable:wStream];
+			[oDelegator writeStreamHasBytesAvailable:wStream];
 		default:
 			break;
     }// end switch write stream event
-}// end WriteStreamCallback(CFWriteStreamRef oStream, CFStreamEventType eventType, void *info)
+}// end WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info)
 
 #pragma mark - callback for network reachability
 static void
