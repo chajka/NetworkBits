@@ -1,13 +1,13 @@
 #YCStreamSession
 		This class handle a stream session to specified host and port by using NSInputStream and NSOutputStream.
 	You can choose socket connection under main thread or specified thread.
-		Easy care for network is down or re-rise, when yor program is running.
+		Easy care for network is rise and down, when your program is running.
 	If happend it, YCStreamSession tell network is down and rise to you. 
 * but now complete yet, now usable tag is Charleston0.3
 
 
 
-## useage
+## Useage
 	Following contents describes how to use YSCStreamSession.
 
 ### Initialize
