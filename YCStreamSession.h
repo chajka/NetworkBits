@@ -57,12 +57,14 @@ enum YCStreamDirection {
 	id <YCStreamSessionDelegate>	delegate;
 		// stream specific variables
 	CFReadStreamRef					readStream;
-	CFWriteStreamRef				writeStream;
 	CFOptionFlags					readStreamOptions;
-	CFOptionFlags					writeStreamOptions;
 	BOOL							readStreamIsSetuped;
-	BOOL							writeStreamIsSetuped;
+	BOOL							readStreamIsScheduled;
 	BOOL							mustHandleReadStreamError;
+	CFWriteStreamRef				writeStream;
+	CFOptionFlags					writeStreamOptions;
+	BOOL							writeStreamIsSetuped;
+	BOOL							writeStreamIsScheduled;
 	BOOL							mustHandleWriteStreamError;
 		// manage connection reachable
 	BOOL							reachabilityValidating;

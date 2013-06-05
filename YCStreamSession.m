@@ -159,8 +159,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #endif
 }// end - (NSInputStream *) inputStream
 
-#pragma mark -
-#pragma mark action
+#pragma mark - message
 - (void) checkReadyToConnect
 {
 	[self validateReachabilityAsync];
@@ -168,21 +167,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (BOOL) connect
 {
-	@try {
-		[self setupReadStream];
-		readStreamIsSetuped = YES;
-		[self setupWriteStream];
-		writeStreamIsSetuped = YES;
-		canConnect = YES;
-	}
-	@catch (NSError *err) {
-		readStreamIsSetuped = NO;
-		CFRelease(readStream);		readStream = NULL;
-		writeStreamIsSetuped = NO;
-		CFRelease(writeStream);		writeStream = NULL;
-		canConnect = NO;
-	}// end try - catch setup read and write streams
-	
 	if (canConnect == NO)
 		return NO;
 	// end check ready to connect
@@ -195,8 +179,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 			[self performSelector:@selector(runWriteStream) onThread:targetThread withObject:nil waitUntilDone:NO];
 	}
 	@catch (NSError *error) {
-		CFRelease(readStream);		readStream = NULL;
-		CFRelease(writeStream);		writeStream = NULL;
 		success = NO;
 	}// end try - catch run read and write streams
 
@@ -205,27 +187,25 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) disconnect
 {
-	if (readStream != NULL)
+	if (readStreamIsScheduled == YES)
 	{
-		[self closeReadStream];
-		[self cleanupReadStream];
+		[self performSelector:@selector(suspendReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	}// end close read stream
 
 	if (writeStream != NULL)
 	{
-		[self closeWriteStream];
-		[self cleanupWriteStream];
+		[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	}// end close write stream
 }// end - (void) disconnect
 
 - (BOOL) reconnectReadStream
 {
-	if (readStream == NULL)
+	if ((readStreamIsScheduled == YES) || ((direction & YCStreamDirectionReadable) == 0))
 		return NO;
 
 	BOOL success = YES;
 	@try {
-		[self runReadStream];
+		[self performSelector:@selector(runReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	}
 	@catch (NSError *err) {
 		success = NO;
@@ -236,19 +216,19 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) closeReadStream
 {
-	if (readStream != NULL)
-		CFReadStreamUnscheduleFromRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	if (readStreamIsScheduled == YES)
+		[self performSelector:@selector(suspendReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	// end close read stream
 }// end - (void) closeReadStream
 
 - (BOOL) reconnectWriteStream
 {
-	if (writeStream == NULL)
+	if ((writeStreamIsScheduled == YES) || ((direction & YCStreamDirectionWriteable) == 0))
 		return NO;
 	
 	BOOL success = YES;
 	@try {
-		[self runWriteStream];
+		[self performSelector:@selector(runWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	}
 	@catch (NSError *err) {
 		success = NO;
@@ -259,14 +239,18 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) closeWriteStream
 {
-	if (writeStream != NULL)
-		CFWriteStreamUnscheduleFromRunLoop(writeStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	if (writeStreamIsScheduled == YES)
+		[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	// end close write stream
 }// end - (void) closeWriteStream
 
 - (void) terminate
 {
-	
+	[self closeReadStream];
+	[self cleanupReadStream];
+
+	[self closeWriteStream];
+	[self cleanupWriteStream];
 }// end - (void) terminate
 
 #pragma mark - internal
@@ -279,12 +263,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	delegate = self;
 
 	readStream = NULL;
-	writeStream = NULL;
 	readStreamOptions = 0;
-	writeStreamOptions = 0;
 	readStreamIsSetuped = NO;
-	writeStreamIsSetuped = NO;
+	readStreamIsScheduled = NO;
 	mustHandleReadStreamError = YES;
+	writeStream = NULL;
+	writeStreamOptions = 0;
+	writeStreamIsSetuped = NO;
+	writeStreamIsScheduled = NO;
 	mustHandleWriteStreamError = YES;
 
 	reachabilityValidating = NO;
@@ -368,6 +354,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #pragma mark - reachablity
 - (void) validateReachabilityAsync
 {		//
+	canConnect = NO;
 	[self performSelector:@selector(scheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
 
 		// start timer if timeout is limited
@@ -424,9 +411,18 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
         CFReadStreamUnscheduleFromRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
         @throw err;
     }// end cleanup read stream if failed
+	readStreamIsScheduled = YES;
     
     return;
 }// end - (CFStreamError) runReadStream
+
+- (void) suspendReadStream
+{
+	if ((readStreamIsScheduled == YES) && ((direction & YCStreamDirectionReadable) != 0))
+		CFReadStreamUnscheduleFromRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	// end if
+	readStreamIsScheduled = NO;
+}// end - (void) suspendReadStream
 
 - (void) cleanupReadStream
 {
@@ -480,14 +476,22 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 			(NSError *)CFWriteStreamCopyError(writeStream);
 		[err autorelease];
 #endif
-        
         CFWriteStreamSetClient(writeStream, kCFStreamEventNone, NULL, NULL);
         CFWriteStreamUnscheduleFromRunLoop(writeStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
         @throw err;
     }// end cleanup write stream if failed
+	writeStreamIsScheduled = YES;
     
     return;
 }// end - (CFStreamError) runWriteStream
+
+- (void) suspendWriteStream
+{
+	if ((writeStreamIsScheduled == YES) && ((direction & YCStreamDirectionWriteable) != 0))
+		CFWriteStreamUnscheduleFromRunLoop(writeStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+	// end if
+	writeStreamIsScheduled = NO;
+}// end - (void) suspendReadStream
 
 - (void) cleanupWriteStream
 {
@@ -500,13 +504,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 - (void) timeoutReachability:(NSTimer *)timer
 {
 	[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
-
+	canConnect = NO;
 	[self streamReadyToConnect:self reachable:NO];
 }// end - (void) timeoutReachability:(NSTimer *)timer
 
 - (void) scheduleReachability
 {
 	reachabilityValidating = YES;
+	canConnect = NO;
 	SCNetworkReachabilityScheduleWithRunLoop(hostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 }// end - (void) scheduleReachability
 
@@ -578,12 +583,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if ([delegate respondsToSelector:@selector(writeStreamNone:)] == YES)
 		writeStreamOptions |= kCFStreamEventNone;
 
+	[self validateReachabilityAsync];
 }// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
 
 #pragma mark - delegator methods
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
 {
 	[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
+	canConnect = YES;
 
 	[delegate streamReadyToConnect:self reachable:reachable];
 }// end - (void) streamReadyToConnect:(YCStreamSession *)session
@@ -595,10 +602,16 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) readStreamEndEncounted:(NSInputStream *)stream
 {
+	canConnect = NO;
+	[self performSelector:@selector(closeReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 }// end - (void) readStreamEndEncounted:(NSStream *)readStream
 
 - (void) readStreamErrorOccured:(NSInputStream *)stream
 {
+	canConnect = NO;
+	[self performSelector:@selector(closeReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	if ([delegate respondsToSelector:@selector(streamIsDisconnected:stream:)] == YES)
+		[delegate streamIsDisconnected:self stream:stream];
 }// end - (void) readStreamErrorOccured:(NSInputStream *)stream
 
 - (void) readStreamOpenCompleted:(NSInputStream *)stream
@@ -620,10 +633,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) writeStreamEndEncounted:(NSOutputStream *)stream
 {
+	canConnect = NO;
+	[self performSelector:@selector(closeWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 }// end - (void) writeStreamEndEncounted:(NSStream *)stream
 
 - (void) writeStreamErrorOccured:(NSOutputStream *)stream
 {
+	canConnect = NO;
+	[self performSelector:@selector(closeWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 }// end - (void) writeStreamErrorOccured:(NSInputStream *)stream
 
 - (void) writeStreamOpenCompleted:(NSOutputStream *)stream
@@ -639,7 +656,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 }// end - (void) writeStreamNone:(NSStream *)stream
 
 #pragma mark - Core Foundation part
-#pragma mark - callback for read stream
+#pragma mark callback for read stream
 static void
 ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 {
@@ -719,5 +736,4 @@ NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabili
 	BOOL reachable = (flags != 0) ? YES : NO;
 	[mySelf streamReadyToConnect:mySelf reachable:reachable];
 }// end NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info);
-
 @end
