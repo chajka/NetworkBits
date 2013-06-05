@@ -20,24 +20,24 @@
 	// process common event
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable;
 	// process input stream
-- (void) readStreamHasBytesAvailable:(NSInputStream *)readStream;
-- (void) readStreamEndEncounted:(NSInputStream *)readStream;
+- (void) readStreamHasBytesAvailable:(NSInputStream *)stream;
+- (void) readStreamEndEncounted:(NSInputStream *)stream;
 	// process output stream
-- (void) writeStreamCanAcceptBytes:(NSOutputStream *)writeStream;
-- (void) writeStreamEndEncounted:(NSOutputStream *)writeStream;
+- (void) writeStreamCanAcceptBytes:(NSOutputStream *)stream;
+- (void) writeStreamEndEncounted:(NSOutputStream *)stream;
 @optional
 	// process common event
-- (void) streamIsDisconnected:(YCStreamSession *)session;
+- (void) streamIsDisconnected:(YCStreamSession *)session stream:(NSStream *)stream;
 	// process for input stream
-- (void) readStreamErrorOccured:(NSInputStream *)readStream;
-- (void) readStreamOpenCompleted:(NSInputStream *)readStream;
+- (void) readStreamErrorOccured:(NSInputStream *)stream;
+- (void) readStreamOpenCompleted:(NSInputStream *)stream;
 - (void) readStreamCanAcceptBytes:(NSInputStream *)readStream;
 - (void) readStreamNone:(NSStream *)readStream;
 	// process for output stream
-- (void) writeStreamErrorOccured:(NSOutputStream *)writeStream;
-- (void) writeStreamOpenCompleted:(NSOutputStream *)writeStream;
-- (void) writeStreamHasBytesAvailable:(NSOutputStream *)writeStream;
-- (void) writeStreamNone:(NSOutputStream *)writeStream;
+- (void) writeStreamErrorOccured:(NSOutputStream *)stream;
+- (void) writeStreamOpenCompleted:(NSOutputStream *)stream;
+- (void) writeStreamHasBytesAvailable:(NSOutputStream *)stream;
+- (void) writeStreamNone:(NSOutputStream *)stream;
 @end
 
 typedef NSUInteger YCStreamDirection;

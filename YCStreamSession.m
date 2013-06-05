@@ -589,54 +589,54 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 }// end - (void) streamReadyToConnect:(YCStreamSession *)session
 
 #pragma mark - delegate methods for input stream
-- (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
+- (void) readStreamHasBytesAvailable:(NSInputStream *)stream
 {
-}// end - (void) readStreamHasBytesAvailable:(NSInputStream *)readStream
+}// end - (void) readStreamHasBytesAvailable:(NSInputStream *)stream
 
-- (void) readStreamEndEncounted:(NSInputStream *)readStream
+- (void) readStreamEndEncounted:(NSInputStream *)stream
 {
 }// end - (void) readStreamEndEncounted:(NSStream *)readStream
 
-- (void) readStreamErrorOccured:(NSInputStream *)readStream
+- (void) readStreamErrorOccured:(NSInputStream *)stream
 {
-}// end - (void) readStreamErrorOccured:(NSInputStream *)readStream
+}// end - (void) readStreamErrorOccured:(NSInputStream *)stream
 
-- (void) readStreamOpenCompleted:(NSInputStream *)readStream
+- (void) readStreamOpenCompleted:(NSInputStream *)stream
 {
-}// end - (void) readStreamOpenCompleted:(NSInputStream *)readStream
+}// end - (void) readStreamOpenCompleted:(NSInputStream *)stream
 
-- (void) readStreamCanAcceptBytes:(NSInputStream *)readStream
+- (void) readStreamCanAcceptBytes:(NSInputStream *)stream
 {
-}// end - (void) readStreamCanAcceptBytes:(NSInputStream *)readStream
+}// end - (void) readStreamCanAcceptBytes:(NSInputStream *)stream
 
-- (void) readStreamNone:(NSInputStream *)readStream
+- (void) readStreamNone:(NSInputStream *)stream
 {
 }// end - (void) readStreamNone:(NSStream *)readStream
 
 #pragma mark - delegate methods for output stream
-- (void) writeStreamCanAcceptBytes:(NSOutputStream *)writeStream
+- (void) writeStreamCanAcceptBytes:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamCanAcceptBytes:(NSInputStream *)writeStream
+}// end - (void) writeStreamCanAcceptBytes:(NSInputStream *)stream
 
-- (void) writeStreamEndEncounted:(NSOutputStream *)writeStream
+- (void) writeStreamEndEncounted:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamEndEncounted:(NSStream *)writeStream
+}// end - (void) writeStreamEndEncounted:(NSStream *)stream
 
-- (void) writeStreamErrorOccured:(NSOutputStream *)writeStream
+- (void) writeStreamErrorOccured:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamErrorOccured:(NSInputStream *)writeStream
+}// end - (void) writeStreamErrorOccured:(NSInputStream *)stream
 
-- (void) writeStreamOpenCompleted:(NSOutputStream *)writeStream
+- (void) writeStreamOpenCompleted:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamOpenCompleted:(NSInputStream *)writeStream
+}// end - (void) writeStreamOpenCompleted:(NSInputStream *)stream
 
-- (void) writeStreamHasBytesAvailable:(NSOutputStream *)writeStream
+- (void) writeStreamHasBytesAvailable:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamHasBytesAvailable:(NSInputStream *)writeStream
+}// end - (void) writeStreamHasBytesAvailable:(NSInputStream *)stream
 
-- (void) writeStreamNone:(NSOutputStream *)writeStream
+- (void) writeStreamNone:(NSOutputStream *)stream
 {
-}// end - (void) writeStreamNone:(NSStream *)writeStream
+}// end - (void) writeStreamNone:(NSStream *)stream
 
 #pragma mark - Core Foundation part
 #pragma mark - callback for read stream
