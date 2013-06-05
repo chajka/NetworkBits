@@ -27,8 +27,8 @@
 	But now direction only effective before set delegate object.
 
 ####Direction constants are
-* YCStreamDirectionReadOnly
-* YCStreamDirectionWriteOnly
+* YCStreamDirectionReadable
+* YCStreamDirectionWriteable
 * YCStreamDirectionBoth
 
 ### Set delegate object

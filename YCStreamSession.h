@@ -42,9 +42,9 @@
 
 typedef NSUInteger YCStreamDirection;
 enum YCStreamDirection {
-	YCStreamDirectionReadOnly = 1,
-	YCStreamDirectionWriteOnly,
-	YCStreamDirectionBoth
+	YCStreamDirectionReadable = 1 << 0,
+	YCStreamDirectionWriteable = 1 << 1,
+	YCStreamDirectionBoth = YCStreamDirectionReadable | YCStreamDirectionWriteable
 };
 
 @interface YCStreamSession : NSObject <YCStreamSessionDelegate> {

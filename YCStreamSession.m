@@ -26,15 +26,20 @@ typedef	uint32_t	SCNetworkReachabilityFlags;
 - (void) runWriteStream;
 - (void) cleanupWriteStream;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 static void ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info);
 static void WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info);
 static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info);
+#ifdef __cplusplus
+}// end extern "C"
+#endif
 @end
 
 @implementation YCStreamSession
 @synthesize	hostName;
 @synthesize	portNumber;
-@synthesize	direction;
 	//
 #pragma mark construct / destruct
 - (id) initWithHostName:(NSString *)host andPort:(int)port
@@ -111,6 +116,31 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	timeout = newTimeout;
 }// end - (void) setTimeout:(NSTimeInterval)newTimeout
 
+- (YCStreamDirection) direction {	return direction;	};
+- (void) setDirection:(YCStreamDirection)newDirection
+{		// split read stream and writes tream flag
+	BOOL runReadStream = ((newDirection & YCStreamDirectionReadable) != 0) ? YES : NO;
+	BOOL runWriteStream = ((newDirection & YCStreamDirectionWriteable) != 0) ? YES : NO;
+	direction = newDirection;
+
+		// reschedule read stream
+	if (readStreamIsScheduled != runReadStream)
+	{
+		if (runReadStream == YES)
+			[self performSelector:@selector(runReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+		else
+			[self performSelector:@selector(suspendReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	}// end if change read stream schedule status
+		// reschedule write stream
+	if (writeStreamIsScheduled != runWriteStream)
+	{
+		if (runWriteStream == YES)
+			[self performSelector:@selector(runWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+		else
+			[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	}// end if change write stream schedule status
+}// end - (void) setDirection:(YCStreamDirection)newDirection
+
 - (NSInputStream *) readStream
 {
 #if __has_feature(objc_arc)
@@ -159,8 +189,10 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 	BOOL success = YES;
 	@try {
-		[self runReadStream];
-		[self runWriteStream];
+		if ((direction & YCStreamDirectionReadable) != 0)
+			[self performSelector:@selector(runReadStream) onThread:targetThread withObject:nil waitUntilDone:NO];
+		if ((direction & YCStreamDirectionWriteable) != 0)
+			[self performSelector:@selector(runWriteStream) onThread:targetThread withObject:nil waitUntilDone:NO];
 	}
 	@catch (NSError *error) {
 		CFRelease(readStream);		readStream = NULL;
