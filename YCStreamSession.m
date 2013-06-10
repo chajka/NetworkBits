@@ -259,6 +259,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	hostName = [host copy];
 	portNumber = port;
 	canConnect = NO;
+	direction = YCStreamDirectionBoth;
 
 	delegate = self;
 
