@@ -14,6 +14,9 @@
 #define ReadStreamSetupError		@"ReadStreamSetupError"
 #define WriteStreamSetupError		@"WriteStreamSetupError"
 
+#define keySelf						@"keySelf"
+#define keyDelegate					@"keyDelegate"
+
 @class YCStreamSession;
 @protocol YCStreamSessionDelegate <NSObject>
 @required
@@ -55,6 +58,7 @@ enum YCStreamDirection {
 	YCStreamDirection				direction;
 		// process stream specific variables
 	id <YCStreamSessionDelegate>	delegate;
+	NSDictionary					*delegateInfo;
 		// stream specific variables
 	CFReadStreamRef					readStream;
 	CFOptionFlags					readStreamOptions;

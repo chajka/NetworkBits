@@ -92,6 +92,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if (targetThread != nil)	[targetThread release];
 	if (delegate != nil)		[delegate release];
 	delegate = nil;
+	if (delegateInfo != nil)	[delegateInfo release];
 
 	[super dealloc];
 #endif
@@ -116,6 +117,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	timeout = newTimeout;
 }// end - (void) setTimeout:(NSTimeInterval)newTimeout
 
+	delegateInfo = [[NSDictionary alloc] initWithObjectsAndKeys:self, keySelf, delegate, keyDelegate, nil];
 - (YCStreamDirection) direction {	return direction;	};
 - (void) setDirection:(YCStreamDirection)newDirection
 {		// split read stream and writes tream flag
@@ -262,6 +264,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	direction = YCStreamDirectionBoth;
 
 	delegate = self;
+	delegateInfo = nil;
 
 	readStream = NULL;
 	readStreamOptions = 0;
@@ -372,9 +375,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		// create StreamClient context
 	CFStreamClientContext context =
 #if __has_feature(objc_arc)
-		{ 0, (__bridge void *)delegate, NULL, NULL, NULL };
+		{ 0, (__bridge void *)delegateInfo, NULL, NULL, NULL };
 #else
-		{ 0, (void *)delegate, NULL, NULL, NULL };
+		{ 0, (void *)delegateInfo, NULL, NULL, NULL };
 #endif
     if (!CFReadStreamSetClient(readStream, readStreamOptions, ReadStreamCallback, &context))
 	{		// check error
@@ -441,9 +444,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		// create StreamClient context
 	CFStreamClientContext context =
 #if __has_feature(objc_arc)
-		{ 0, (__bridge void *)delegate, NULL, NULL, NULL };
+		{ 0, (__bridge void *)delegateInfo, NULL, NULL, NULL };
 #else
-		{ 0, (void *)delegate, NULL, NULL, NULL };
+		{ 0, (void *)delegateInfo, NULL, NULL, NULL };
 #endif
     if (!CFWriteStreamSetClient(writeStream, writeStreamOptions, WriteStreamCallback, &context))
 	{
@@ -664,10 +667,10 @@ static void
 ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void* info)
 {
 #if __has_feature(objc_arc)
-	id iDelegator = (__bridge id)info;
+	id iDelegator = [((__bridge NSDictionary *)info) objectForKey:keyDelegate];
 	NSInputStream *rStream = (__bridge NSInputStream *)readStream;
 #else
-	id iDelegator = (id)info;
+	id iDelegator = [((NSDictionary *)info) objectForKey:keyDelegate];
 	NSInputStream *rStream = (NSInputStream *)readStream;
 #endif
     switch (eventType) {
@@ -681,7 +684,11 @@ ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void
 			[iDelegator readStreamEndEncounted:rStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[iDelegator readStreamErrorOccured:rStream];
+#if __has_feature(objc_arc)
+			[[[((__bridge NSDictionary *)info) objectForKey:keySelf] readStreamErrorOccured:rStream];
+#else
+			[[((NSDictionary *)info) objectForKey:keySelf] readStreamErrorOccured:rStream];
+#endif
             break;
 		case kCFStreamEventCanAcceptBytes:
 			[iDelegator readStreamCanAcceptBytes:rStream];
@@ -698,10 +705,10 @@ static void
 WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, void *info)
 {
 #if __has_feature(objc_arc)
-	id oDelegator = (__bridge id)info;
+	id oDelegator = [((__bridge NSDictionary *)info) objectForKey:keyDelegate];
 	NSOutputStream *wStream = (__bridge NSOutputStream *)writeStream;
 #else
-	id oDelegator = (id)info;
+	id oDelegator = [((NSDictionary *)info) objectForKey:keyDelegate];
 	NSOutputStream *wStream = (NSOutputStream *)writeStream;
 #endif
     switch (eventType) {
@@ -715,7 +722,11 @@ WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, v
 			[oDelegator writeStreamEndEncounted:wStream];
             break;
         case kCFStreamEventErrorOccurred:
-			[oDelegator writeStreamErrorOccured:wStream];
+#if __has_feature(objc_arc)
+			[[[((__bridge NSDictionary *)info) objectForKey:keySelf] writeStreamErrorOccured:wStream];
+#else
+			[[((NSDictionary *)info) objectForKey:keySelf] writeStreamErrorOccured:wStream];
+#endif
             break;
         case kCFStreamEventHasBytesAvailable:
 			[oDelegator writeStreamHasBytesAvailable:wStream];
