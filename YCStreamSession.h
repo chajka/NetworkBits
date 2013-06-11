@@ -68,7 +68,7 @@ enum YCStreamDirection {
 	BOOL							mustHandleWriteStreamError;
 		// manage connection reachable
 	BOOL							reachabilityValidating;
-	SCNetworkReachabilityRef		hostRef;
+	SCNetworkReachabilityRef		reachabilityHostRef;
 	NSTimeInterval					timeout;
 		// threading
 	NSThread						*targetThread;

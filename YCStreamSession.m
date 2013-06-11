@@ -84,8 +84,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 	if (readStream != NULL)		[self closeReadStream];
 	if (writeStream != NULL)	[self closeWriteStream];
-	if (hostRef != NULL)		CFRelease(hostRef);
-	hostRef = NULL;
+	if (reachabilityHostRef != NULL)		CFRelease(reachabilityHostRef);
+	reachabilityHostRef = NULL;
 #if __has_feature(objc_arc)
 	delegate = nil;
 #else
@@ -102,8 +102,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 	if (readStream != NULL)		[self closeReadStream];
 	if (writeStream != NULL)	[self closeWriteStream];
-	if (hostRef != NULL)		CFRelease(hostRef);
-	hostRef = NULL;
+	if (reachabilityHostRef != NULL)		CFRelease(reachabilityHostRef);
+	reachabilityHostRef = NULL;
 
 	[super finalize];
 }// end - (void) finalize
@@ -276,7 +276,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 	reachabilityValidating = NO;
 		// create SCNetworkReachabilityRef
-	hostRef = NULL;
+	reachabilityHostRef = NULL;
 	timeout = 0;
 
 	targetThread = nil;
@@ -327,20 +327,22 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	}// end if create stream was failed
 
 #if __has_feature(objc_arc)
-	SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
+		SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
 #else
-	SCNetworkReachabilityContext context = { 0, (void *)self, NULL, NULL, NULL };
+		SCNetworkReachabilityContext context = { 0, (void *)self, NULL, NULL, NULL };
 #endif
-	hostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
-	if (hostRef != NULL)
-		if (SCNetworkReachabilitySetCallback(hostRef, NetworkReachabilityCallBack, &context) == true)
-			success = YES;
-	// end if hostref
+		reachabilityHostRef = SCNetworkReachabilityCreateWithName(kCFAllocatorDefault, [hostName UTF8String]);
+		if (reachabilityHostRef != NULL)
+			if (!SCNetworkReachabilitySetCallback(reachabilityHostRef, NetworkReachabilityCallBack, &context))
+				success = NO;
+			// end if set callback for reachability
+		// end if hostref
+	}// end if can create reachability ref
 
-	if ((hostRef == NULL) || (success == NO))
+	if ((reachabilityHostRef == NULL) || (success == NO))
 	{
-		if (hostRef != NULL)		CFRelease(hostRef);
-		hostRef = NULL;
+		if (reachabilityHostRef != NULL)		CFRelease(reachabilityHostRef);
+		reachabilityHostRef = NULL;
 #if !__has_feature(objc_arc)
 		[hostName release];
 #endif
@@ -513,12 +515,12 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 	reachabilityValidating = YES;
 	canConnect = NO;
-	SCNetworkReachabilityScheduleWithRunLoop(hostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+	SCNetworkReachabilityScheduleWithRunLoop(reachabilityHostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 }// end - (void) scheduleReachability
 
 - (void) unscheduleReachability
 {
-	SCNetworkReachabilityUnscheduleFromRunLoop(hostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+	SCNetworkReachabilityUnscheduleFromRunLoop(reachabilityHostRef, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
 	reachabilityValidating = NO;
 }// end - (void) unscheduleReachability
 
