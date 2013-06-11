@@ -566,6 +566,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 	if ((delegate != self) && ([delegate respondsToSelector:@selector(streamIsDisconnected:stream:)] == YES))
 		[delegate streamIsDisconnected:self stream:nil];
+	else
+		if (reachabilityValidating == NO)
+			[self validateReachabilityAsync];
+		// end if
+	// end if
 }// end - (void) streamIsDisconnected:(YCStreamSession *)session
 
 #pragma mark - accessor of StreamSessionDelegate
@@ -603,6 +608,11 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	[self performSelector:@selector(closeReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	if ([delegate respondsToSelector:@selector(streamIsDisconnected:stream:)] == YES)
 		[delegate streamIsDisconnected:self stream:stream];
+	else
+		if (reachabilityValidating == NO)
+			[self streamIsDisconnected:self];
+		// end if check reachability
+	// end if error handling is myself or delegate
 }// end - (void) readStreamErrorOccured:(NSInputStream *)stream
 
 - (void) readStreamOpenCompleted:(NSInputStream *)stream
@@ -631,9 +641,14 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 - (void) writeStreamErrorOccured:(NSOutputStream *)stream
 {
 	canConnect = NO;
-	[self performSelector:@selector(closeWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	[self closeWriteStream];
 	if ([delegate respondsToSelector:@selector(writeStreamErrorOccured:)])
 		[delegate writeStreamErrorOccured:stream];
+	else
+		if (reachabilityValidating == NO)
+			[self streamIsDisconnected:self];
+		// end if check reachability
+	// end if error handling is myself or delegate
 }// end - (void) writeStreamErrorOccured:(NSInputStream *)stream
 
 - (void) writeStreamOpenCompleted:(NSOutputStream *)stream
