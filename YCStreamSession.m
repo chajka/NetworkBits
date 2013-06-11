@@ -632,6 +632,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 {
 	canConnect = NO;
 	[self performSelector:@selector(closeWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	if ([delegate respondsToSelector:@selector(writeStreamErrorOccured:)])
+		[delegate writeStreamErrorOccured:stream];
 }// end - (void) writeStreamErrorOccured:(NSInputStream *)stream
 
 - (void) writeStreamOpenCompleted:(NSOutputStream *)stream
