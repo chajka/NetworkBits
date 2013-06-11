@@ -21,10 +21,16 @@ typedef	uint32_t	SCNetworkReachabilityFlags;
 
 - (void) setupReadStream;
 - (void) runReadStream;
+- (void) suspendReadStream;
 - (void) cleanupReadStream;
 - (void) setupWriteStream;
 - (void) runWriteStream;
+- (void) suspendWriteStream;
 - (void) cleanupWriteStream;
+
+- (void) timeoutReachability:(NSTimer *)timer;
+- (void) scheduleReachability;
+- (void) unscheduleReachability;
 
 #ifdef __cplusplus
 extern "C" {
@@ -238,19 +244,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	return success;
 }// end - (void) connect
 
-- (void) disconnect
-{
-	if (readStreamIsScheduled == YES)
-	{
-		[self performSelector:@selector(suspendReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
-	}// end close read stream
-
-	if (writeStream != NULL)
-	{
-		[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
-	}// end close write stream
-}// end - (void) disconnect
-
 - (BOOL) reconnectReadStream
 {
 	if ((readStreamIsScheduled == YES) || ((direction & YCStreamDirectionReadable) == 0))
@@ -296,6 +289,19 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
 	// end close write stream
 }// end - (void) closeWriteStream
+
+- (void) disconnect
+{
+	if (readStreamIsScheduled == YES)
+	{
+		[self performSelector:@selector(suspendReadStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	}// end close read stream
+
+	if (writeStream != NULL)
+	{
+		[self performSelector:@selector(suspendWriteStream) onThread:targetThread withObject:nil waitUntilDone:YES];
+	}// end close write stream
+}// end - (void) disconnect
 
 - (void) terminate
 {
@@ -561,11 +567,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	if ((delegate != self) && ([delegate respondsToSelector:@selector(streamIsDisconnected:stream:)] == YES))
 		[delegate streamIsDisconnected:self stream:nil];
 }// end - (void) streamIsDisconnected:(YCStreamSession *)session
-
-- (void) streamCanRestart:(YCStreamSession *)session
-{
-	[self streamReadyToConnect:session reachable:YES];
-}// end - (void) streamCanRestart:(YCStreamSession *)session
 
 #pragma mark - accessor of StreamSessionDelegate
 #pragma mark - delegator methods

@@ -52,36 +52,36 @@ enum YCStreamDirection {
 
 @interface YCStreamSession : NSObject <YCStreamSessionDelegate> {
 		// connection specific variables
-	NSString						*hostName;
-	int								portNumber;
-	BOOL							canConnect;
-	YCStreamDirection				direction;
+	NSString									*hostName;
+	int											portNumber;
+	BOOL										canConnect;
+	YCStreamDirection							direction;
 		// process stream specific variables
-	id <YCStreamSessionDelegate>	delegate;
-	NSDictionary					*delegateInfo;
+	id <YCStreamSessionDelegate>				delegate;
+	NSDictionary								*delegateInfo;
 		// stream specific variables
-	CFReadStreamRef					readStream;
-	CFOptionFlags					readStreamOptions;
-	BOOL							readStreamIsSetuped;
-	BOOL							readStreamIsScheduled;
-	BOOL							mustHandleReadStreamError;
-	CFWriteStreamRef				writeStream;
-	CFOptionFlags					writeStreamOptions;
-	BOOL							writeStreamIsSetuped;
-	BOOL							writeStreamIsScheduled;
-	BOOL							mustHandleWriteStreamError;
+	CFReadStreamRef								readStream;
+	CFOptionFlags								readStreamOptions;
+	BOOL										readStreamIsSetuped;
+	BOOL										readStreamIsScheduled;
+	BOOL										mustHandleReadStreamError;
+	CFWriteStreamRef							writeStream;
+	CFOptionFlags								writeStreamOptions;
+	BOOL										writeStreamIsSetuped;
+	BOOL										writeStreamIsScheduled;
+	BOOL										mustHandleWriteStreamError;
 		// manage connection reachable
-	BOOL							reachabilityValidating;
-	SCNetworkReachabilityRef		reachabilityHostRef;
-	NSTimeInterval					timeout;
+	BOOL										reachabilityValidating;
+	SCNetworkReachabilityRef					reachabilityHostRef;
+	NSTimeInterval								timeout;
 		// threading
-	NSThread						*targetThread;
+	NSThread									*targetThread;
 }
-@property (readonly) NSString		*hostName;
-@property (readonly) int			portNumber;
-@property (assign, readwrite) YCStreamDirection direction;
-@property (readonly) NSInputStream	*readStream;
-@property (readonly) NSOutputStream	*writeStream;
+@property (readonly) NSString					*hostName;
+@property (readonly) int						portNumber;
+@property (assign, readwrite) YCStreamDirection	direction;
+@property (readonly) NSInputStream				*readStream;
+@property (readonly) NSOutputStream				*writeStream;
 #if __has_feature(objc_arc)
 @property (strong, readwrite) id <YCStreamSessionDelegate> delegate;
 #else
