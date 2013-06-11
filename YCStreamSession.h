@@ -88,6 +88,7 @@ enum YCStreamDirection {
 @property (retain, readwrite) id <YCStreamSessionDelegate> delegate;
 #endif
 @property (assign, readwrite) NSTimeInterval timeout;
+@property (readonly) BOOL						reachabilityValidating;
 
 - (id) initWithHostName:(NSString *)host andPort:(int)port;
 - (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread;

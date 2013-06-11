@@ -40,6 +40,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 @implementation YCStreamSession
 @synthesize	hostName;
 @synthesize	portNumber;
+@synthesize reachabilityValidating;
 	//
 #pragma mark construct / destruct
 - (id) initWithHostName:(NSString *)host andPort:(int)port
