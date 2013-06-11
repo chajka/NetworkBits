@@ -118,7 +118,57 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 	timeout = newTimeout;
 }// end - (void) setTimeout:(NSTimeInterval)newTimeout
 
+- (id <YCStreamSessionDelegate>) delegate	{	return delegate;	}
+- (void) setDelegate:(id <YCStreamSessionDelegate>)newDelegate
+{
+# if !__has_feature(objc_arc)
+		// check and release current delegate
+	if (delegate != self)
+		[delegate autorelease];
+	// end if
+#endif
+		// set delegate
+	delegate = newDelegate;
+#if !__has_feature(objc_arc)
+	[delegate retain];
+#endif
 	delegateInfo = [[NSDictionary alloc] initWithObjectsAndKeys:self, keySelf, delegate, keyDelegate, nil];
+
+		// check have methods
+		// required input stream methods
+	if ([delegate respondsToSelector:@selector(readStreamHasBytesAvailable:)] == YES)
+		readStreamOptions |= kCFStreamEventHasBytesAvailable;
+	if ([delegate respondsToSelector:@selector(readStreamEndEncounted:)] == YES)
+		readStreamOptions |= kCFStreamEventEndEncountered;
+		// optional input stream methods
+	readStreamOptions |= kCFStreamEventErrorOccurred;
+	if ([delegate respondsToSelector:@selector(readStreamErrorOccured:)] == YES)
+		mustHandleReadStreamError = NO;
+	if ([delegate respondsToSelector:@selector(readStreamOpenCompleted:)] == YES)
+		readStreamOptions |= kCFStreamEventOpenCompleted;
+	if ([delegate respondsToSelector:@selector(readStreamCanAcceptBytes:)] == YES)
+		readStreamOptions |= kCFStreamEventCanAcceptBytes;
+	if ([delegate respondsToSelector:@selector(readStreamNone:)] == YES)
+		readStreamOptions |= kCFStreamEventNone;
+		// required output stream methods
+	if ([delegate respondsToSelector:@selector(writeStreamCanAcceptBytes:)] == YES)
+		writeStreamOptions |= kCFStreamEventCanAcceptBytes;
+	if ([delegate respondsToSelector:@selector(writeStreamEndEncounted:)] == YES)
+		writeStreamOptions |= kCFStreamEventEndEncountered;
+		// optional output stream methods
+	writeStreamOptions |= kCFStreamEventErrorOccurred;
+	if ([delegate respondsToSelector:@selector(writeStreamErrorOccured:)] == YES)
+		mustHandleReadStreamError = NO;
+	if ([delegate respondsToSelector:@selector(writeStreamOpenCompleted:)] == YES)
+		writeStreamOptions |= kCFStreamEventOpenCompleted;
+	if ([delegate respondsToSelector:@selector(writeStreamHasBytesAvailable:)] == YES)
+		writeStreamOptions |= kCFStreamEventHasBytesAvailable;
+	if ([delegate respondsToSelector:@selector(writeStreamNone:)] == YES)
+		writeStreamOptions |= kCFStreamEventNone;
+	
+	[self validateReachabilityAsync];
+}// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
+
 - (YCStreamDirection) direction {	return direction;	};
 - (void) setDirection:(YCStreamDirection)newDirection
 {		// split read stream and writes tream flag
@@ -540,59 +590,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 }// end - (void) streamCanRestart:(YCStreamSession *)session
 
 #pragma mark - accessor of StreamSessionDelegate
-- (id <YCStreamSessionDelegate>) delegate
-{
-	return delegate;
-}// end nputStreamDelegate
-
-- (void) setDelegate:(id <YCStreamSessionDelegate>)delegator
-{
-# if !__has_feature(objc_arc)
-		// check and release current delegate
-	if (delegate != self)
-		[delegate autorelease];
-	// end if
-#endif
-		// set delegate
-	delegate = delegator;
-#if !__has_feature(objc_arc)
-	[delegate retain];
-#endif
-		// check have methods
-			// required input stream methods
-	if ([delegate respondsToSelector:@selector(readStreamHasBytesAvailable:)] == YES)
-		readStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([delegate respondsToSelector:@selector(readStreamEndEncounted:)] == YES)
-		readStreamOptions |= kCFStreamEventEndEncountered;
-			// optional input stream methods
-	readStreamOptions |= kCFStreamEventErrorOccurred;
-	if ([delegate respondsToSelector:@selector(readStreamErrorOccured:)] == YES)
-		mustHandleReadStreamError = NO;
-	if ([delegate respondsToSelector:@selector(readStreamOpenCompleted:)] == YES)
-		readStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([delegate respondsToSelector:@selector(readStreamCanAcceptBytes:)] == YES)
-		readStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([delegate respondsToSelector:@selector(readStreamNone:)] == YES)
-		readStreamOptions |= kCFStreamEventNone;
-			// required output stream methods
-	if ([delegate respondsToSelector:@selector(writeStreamCanAcceptBytes:)] == YES)
-		writeStreamOptions |= kCFStreamEventCanAcceptBytes;
-	if ([delegate respondsToSelector:@selector(writeStreamEndEncounted:)] == YES)
-		writeStreamOptions |= kCFStreamEventEndEncountered;
-			// optional output stream methods
-	writeStreamOptions |= kCFStreamEventErrorOccurred;
-	if ([delegate respondsToSelector:@selector(writeStreamErrorOccured:)] == YES)
-		mustHandleReadStreamError = NO;
-	if ([delegate respondsToSelector:@selector(writeStreamOpenCompleted:)] == YES)
-		writeStreamOptions |= kCFStreamEventOpenCompleted;
-	if ([delegate respondsToSelector:@selector(writeStreamHasBytesAvailable:)] == YES)
-		writeStreamOptions |= kCFStreamEventHasBytesAvailable;
-	if ([delegate respondsToSelector:@selector(writeStreamNone:)] == YES)
-		writeStreamOptions |= kCFStreamEventNone;
-
-	[self validateReachabilityAsync];
-}// end - (void) setInputStreamDelegate:(id <InputStreamConnectionDelegate>)delegate
-
 #pragma mark - delegator methods
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
 {
