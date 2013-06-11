@@ -670,7 +670,7 @@ ReadStreamCallback(CFReadStreamRef readStream, CFStreamEventType eventType, void
             break;
         case kCFStreamEventErrorOccurred:
 #if __has_feature(objc_arc)
-			[[[((__bridge NSDictionary *)info) objectForKey:keySelf] readStreamErrorOccured:rStream];
+			[[((__bridge NSDictionary *)info) objectForKey:keySelf] readStreamErrorOccured:rStream];
 #else
 			[[((NSDictionary *)info) objectForKey:keySelf] readStreamErrorOccured:rStream];
 #endif
@@ -708,7 +708,7 @@ WriteStreamCallback(CFWriteStreamRef writeStream, CFStreamEventType eventType, v
             break;
         case kCFStreamEventErrorOccurred:
 #if __has_feature(objc_arc)
-			[[[((__bridge NSDictionary *)info) objectForKey:keySelf] writeStreamErrorOccured:wStream];
+			[[((__bridge NSDictionary *)info) objectForKey:keySelf] writeStreamErrorOccured:wStream];
 #else
 			[[((NSDictionary *)info) objectForKey:keySelf] writeStreamErrorOccured:wStream];
 #endif
