@@ -3,7 +3,6 @@
 	You can choose socket connection under main thread or specified thread.
 		Easy care for network is rise and down, when your program is running.
 	If happend it, YCStreamSession tell network is down and rise to you. 
-* but now complete yet, now usable tag is Charleston0.3
 
 
 
