@@ -338,7 +338,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (BOOL) initializeHost
 {
-	BOOL success = NO;
+	BOOL success = YES;
 		// create CFHostRef from server and port
 #if __has_feature(objc_arc)
 	CFHostRef host = CFHostCreateWithName(kCFAllocatorDefault, (__bridge CFStringRef)hostName);
@@ -348,38 +348,12 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		// allocate target host/port’s read & write stream
 	CFStreamCreatePairWithSocketToCFHost(kCFAllocatorDefault, host, portNumber, &readStream, &writeStream);
 	CFRelease(host);
-	if ((readStream != NULL) && (writeStream != NULL))
-		@try {
-			[self setupReadStream];
-			[self setupWriteStream];
-		}
-		@catch (NSError *err) {
-			CFRelease(readStream);
-			CFRelease(writeStream);
-			success = NO;
-#if !__has_feature(objc_arc)
-			[hostName release];
-#endif
-			hostName = nil;
-
-			return NO;
-		}// end try-catch
+	if ((readStream == NULL) || (writeStream == NULL))
+		success = NO;
 	// end if create read / write stream
 
-	if ((readStream == NULL) || (writeStream == NULL))
+	if (success == YES)
 	{
-		if (readStream != NULL)		CFRelease(readStream);
-		readStream = NULL;
-		if (writeStream != NULL)	CFRelease(writeStream);
-		writeStream = NULL;
-#if !__has_feature(objc_arc)
-		[hostName release];
-#endif
-		hostName = nil;
-		
-		return NO;
-	}// end if create stream was failed
-
 #if __has_feature(objc_arc)
 		SCNetworkReachabilityContext context = { 0, (__bridge void *)self, NULL, NULL, NULL };
 #else
@@ -395,6 +369,8 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 	if ((reachabilityHostRef == NULL) || (success == NO))
 	{
+		if (readStream != NULL)		CFRelease(readStream);
+		if (writeStream != NULL)	CFRelease(writeStream);
 		if (reachabilityHostRef != NULL)		CFRelease(reachabilityHostRef);
 		reachabilityHostRef = NULL;
 #if !__has_feature(objc_arc)
@@ -417,6 +393,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 		// start timer if timeout is limited
 	if (timeout != 0)
 		[NSTimer scheduledTimerWithTimeInterval:timeout target:self selector:@selector(timeoutReachability:) userInfo:nil repeats:NO];
+	// end if timeout timer need run
 }// end - (void) validateReachabilityAsync
 
 #pragma mark - read Stream
@@ -581,18 +558,27 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #pragma mark - delegator process methods
 - (void) streamIsDisconnected:(YCStreamSession *)session
 {
-	
+	if ((delegate != self) && ([delegate respondsToSelector:@selector(streamIsDisconnected:stream:)] == YES))
+		[delegate streamIsDisconnected:self stream:nil];
 }// end - (void) streamIsDisconnected:(YCStreamSession *)session
 
 - (void) streamCanRestart:(YCStreamSession *)session
 {
-	
+	[self streamReadyToConnect:session reachable:YES];
 }// end - (void) streamCanRestart:(YCStreamSession *)session
 
 #pragma mark - accessor of StreamSessionDelegate
 #pragma mark - delegator methods
 - (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable
 {
+	@try {
+		[self setupReadStream];
+		[self setupWriteStream];
+	}
+	@catch (NSException *exception) {
+		@throw exception;
+	}// end try-catch
+
 	[self performSelector:@selector(unscheduleReachability) onThread:targetThread withObject:nil waitUntilDone:YES];
 	canConnect = YES;
 
