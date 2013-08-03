@@ -7,6 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
+#if MAC_OS_X_VERSION_MIN_REQUIRED == MAC_OS_X_VERSION_10_5
+@protocol NSURLConnectionDelegate <NSObject>
+@end
+#endif
 
 @interface HTTPConnection : NSObject {
 @protected
@@ -22,7 +26,7 @@
 @property (copy, readwrite) NSString					*path;
 @property (copy, readwrite) NSMutableDictionary			*params;
 @property (readonly) NSURLResponse						*response;
-@property (nonatomic, readwrite) NSURLRequestCachePolicy	cachePolicy;
+@property (assign, readwrite) NSURLRequestCachePolicy	cachePolicy;
 @property (assign, readwrite) NSTimeInterval			timeout;
 	// class method
 /*!
@@ -148,12 +152,12 @@
 #endif
 
 /*!
-	@method httpDataAsyncWithdelegate:
-	@abstract send HTTP request with async data transfer.
+	@method connectionForDelegate:
+	@abstract return NSURLConnection object for async data transfer.
 	@param delegate object for data recieve. if nil, it dosen’t work.
 	@result NSURLConnection object of this connection;
  */
-- (NSURLConnection *) httpDataAsyncByDelegate:(id)target;
+- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate;
 
 	// for HTTP connection method literal
 #define RequestMethodPost	@"POST"
@@ -162,7 +166,5 @@
 #define ParamConcatFormat	@"%@=%@"
 #define ParamsConcatSymbol	@"&"
 #define QueryConcatSymbol	@"?"
-
-extern const NSTimeInterval defaultTimeout; // second
 
 @end

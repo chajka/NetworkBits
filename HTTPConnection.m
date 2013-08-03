@@ -15,8 +15,8 @@
 #define HeaderValueContentType	@"application/x-www-form-urlencoded; charset=UTF-8"
 #define HeaderFieldReferer		@"Referer"
 
-const NSTimeInterval defaultTimeout = 30; // second
-const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMemoryOnly;
+static const NSTimeInterval defaultTimeout = 30; // second
+static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMemoryOnly;
 
 #pragma mark private methods
 @interface HTTPConnection ()
@@ -248,7 +248,7 @@ const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMem
 }// end if
 
 #pragma mark - cache policy
-- (NSURLRequestCachePolicy) chachePolicy { return cachePolicy; } // end
+- (NSURLRequestCachePolicy) cachePolicy { return cachePolicy; } // end
 - (void) setCachePolicy:(NSURLRequestCachePolicy)newCachePolicy
 {
 	cachePolicy = newCachePolicy;
@@ -350,14 +350,14 @@ const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMem
 	return data;
 }// end - (NSData *) dataByPost:(NSError **)error
 
-- (NSURLConnection *) httpDataAsyncByDelegate:(id)target
+- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate
 {
-	if (target == nil)
+	if (delegate == nil)
 		return nil;
 	// end if target isn't there, because self cannot become delegator.
 
 	NSURLConnection *connection;
-	connection = [[NSURLConnection alloc] initWithRequest:request delegate:target];
+	connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
 #if !__has_feature(objc_arc)
 	[connection autorelease];
 #endif
