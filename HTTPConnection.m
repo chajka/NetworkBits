@@ -15,7 +15,8 @@
 #define HeaderValueContentType	@"application/x-www-form-urlencoded; charset=UTF-8"
 #define HeaderFieldReferer		@"Referer"
 
-const NSTimeInterval defaultTimeout = 30; // second
+static const NSTimeInterval defaultTimeout = 30; // second
+static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMemoryOnly;
 
 #pragma mark private methods
 @interface HTTPConnection ()
@@ -168,8 +169,9 @@ const NSTimeInterval defaultTimeout = 30; // second
 		params = nil;
 		response = nil;
 		timeout = defaultTimeout;
+		cachePolicy = defaultCachePolicy;
 		request = [[NSMutableURLRequest alloc] init];
-		[request setCachePolicy:NSURLCacheStorageAllowedInMemoryOnly];
+		[request setCachePolicy:cachePolicy];
 		[request setTimeoutInterval:timeout];
 		params = [[NSMutableDictionary alloc] init];
 	}// end if self
@@ -186,7 +188,8 @@ const NSTimeInterval defaultTimeout = 30; // second
 		params = [param copy];
 		response = nil;
 		timeout = defaultTimeout;
-		request = [[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:NSURLCacheStorageAllowedInMemoryOnly timeoutInterval:timeout];
+		cachePolicy = defaultCachePolicy;
+		request = [[NSMutableURLRequest alloc] initWithURL:URL cachePolicy:cachePolicy timeoutInterval:timeout];
 	}// end if self
 	return self;
 }// end - (id) initWithURL:(NSURL *)url_ withParams:(NSDictionary *)param
@@ -211,11 +214,7 @@ const NSTimeInterval defaultTimeout = 30; // second
 }// end - (void) addCustomHeaders:(NSString *)referer
 
 #pragma mark - URL’s accessor
-- (NSURL *) URL
-{
-	return URL;
-}// end - (NSURL *) URL
-
+- (NSURL *) URL	{ return URL; }// end - (NSURL *) URL
 - (void) setURL:(NSURL *)url
 {
 	if ([URL isEqualTo:url] == YES)
@@ -240,16 +239,21 @@ const NSTimeInterval defaultTimeout = 30; // second
 }// end - (void) setURL:(NSURL *)url andParams:(NSDictionary *)param
 
 #pragma mark - Params’s accessor
-- (NSDictionary *)params
-{
-	return params;
-}// end - (NSDictionary *)params
+- (NSDictionary *)params { return params; }// end - (NSDictionary *)params
 
 - (void) setParams:(NSDictionary *)param
 {
 	[params removeAllObjects];
 	[params addEntriesFromDictionary:param];
 }// end if
+
+#pragma mark - cache policy
+- (NSURLRequestCachePolicy) cachePolicy { return cachePolicy; } // end
+- (void) setCachePolicy:(NSURLRequestCachePolicy)newCachePolicy
+{
+	cachePolicy = newCachePolicy;
+	[request setCachePolicy:cachePolicy];
+}// end - (void) setCachePolicy:(NSURLRequestCachePolicy)newCachePolicy
 
 #pragma mark -
 #pragma mark instance methods
@@ -346,14 +350,14 @@ const NSTimeInterval defaultTimeout = 30; // second
 	return data;
 }// end - (NSData *) dataByPost:(NSError **)error
 
-- (NSURLConnection *) httpDataAsyncByDelegate:(id)target
+- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate
 {
-	if (target == nil)
+	if (delegate == nil)
 		return nil;
 	// end if target isn't there, because self cannot become delegator.
 
 	NSURLConnection *connection;
-	connection = [[NSURLConnection alloc] initWithRequest:request delegate:target];
+	connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
 #if !__has_feature(objc_arc)
 	[connection autorelease];
 #endif
