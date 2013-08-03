@@ -10,18 +10,20 @@
 
 @interface HTTPConnection : NSObject {
 @protected
-	NSURL				*URL;
-	NSString			*path;
-	NSMutableDictionary	*params;
-	NSURLResponse		*response;
-	NSTimeInterval		timeout;
-	NSMutableURLRequest	*request;
+	NSURL						*URL;
+	NSString					*path;
+	NSMutableDictionary			*params;
+	NSURLResponse				*response;
+	NSURLRequestCachePolicy		cachePolicy;
+	NSTimeInterval				timeout;
+	NSMutableURLRequest			*request;
 }
-@property (copy, readwrite)		NSURL				*URL;
-@property (copy, readwrite)		NSString			*path;
-@property (copy, readwrite)		NSMutableDictionary	*params;
-@property (readonly)			NSURLResponse		*response;
-@property (assign, readwrite)	NSTimeInterval		timeout;
+@property (copy, readwrite) NSURL						*URL;
+@property (copy, readwrite) NSString					*path;
+@property (copy, readwrite) NSMutableDictionary			*params;
+@property (readonly) NSURLResponse						*response;
+@property (nonatomic, readwrite) NSURLRequestCachePolicy	cachePolicy;
+@property (assign, readwrite) NSTimeInterval			timeout;
 	// class method
 /*!
 	@method HTTPSource:
