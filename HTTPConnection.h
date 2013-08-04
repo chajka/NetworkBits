@@ -26,6 +26,7 @@
 @property (copy, readwrite) NSString					*path;
 @property (copy, readwrite) NSMutableDictionary			*params;
 @property (readonly) NSURLResponse						*response;
+@property (readonly) NSMutableURLRequest				*request;
 @property (assign, readwrite) NSURLRequestCachePolicy	cachePolicy;
 @property (assign, readwrite) NSTimeInterval			timeout;
 	// class method

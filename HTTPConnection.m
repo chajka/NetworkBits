@@ -42,6 +42,7 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 @synthesize path;
 @synthesize response;
 @synthesize timeout;
+@synthesize request;
 
 #pragma mark class methods
 #if __has_feature(objc_arc)
