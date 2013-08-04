@@ -12,6 +12,9 @@
 @end
 #endif
 
+#define HTTPMethodGET			@"GET"
+#define HTTPMethodPOST			@"POST"
+
 @interface HTTPConnection : NSObject {
 @protected
 	NSURL						*URL;
