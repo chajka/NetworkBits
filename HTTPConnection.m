@@ -255,6 +255,8 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 	[request setCachePolicy:cachePolicy];
 }// end - (void) setCachePolicy:(NSURLRequestCachePolicy)newCachePolicy
 
+#pragma mark - URLRequest
+
 #pragma mark -
 #pragma mark instance methods
 - (void) clearResponse
@@ -350,18 +352,48 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 	return data;
 }// end - (NSData *) dataByPost:(NSError **)error
 
-- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate
+- (NSURLConnection *) connectionBy:(HTTPMethod)method delegate:(id<NSURLConnectionDelegate>)delegate
 {
 	if (delegate == nil)
 		return nil;
 	// end if target isn't there, because self cannot become delegator.
+
+	switch (method) {
+		case HTTPMethodPOST:
+			{
+				NSURL *queryURL = nil;
+				NSString *queryURLString = [NSString stringWithString:[URL absoluteString]];
+				if (params != nil)
+					queryURLString = [[URL absoluteString] stringByAppendingString:
+									  [QueryConcatSymbol stringByAppendingString:[self buildParam]]];
+					// end if have param
+				queryURL = [NSURL URLWithString:queryURLString];
+				[request setURL:queryURL];
+				[request setHTTPMethod:RequestMethodGet];
+			}// end - (NSMutableURLRequest *)requestForGet
+			break;
+		case HTTPMethodGET:
+		default:
+		{
+			NSURL *queryURL = nil;
+			NSString *queryURLString = [NSString stringWithString:[URL absoluteString]];
+			if (params != nil)
+				queryURLString = [[URL absoluteString] stringByAppendingString:
+								  [QueryConcatSymbol stringByAppendingString:[self buildParam]]];
+				// end if have param
+			queryURL = [NSURL URLWithString:queryURLString];
+			[request setURL:queryURL];
+			[request setHTTPMethod:RequestMethodGet];
+		}// end - (NSMutableURLRequest *)requestForGet
+			break;
+	}// end case by HTTPMethod
 
 	NSURLConnection *connection;
 	connection = [[NSURLConnection alloc] initWithRequest:request delegate:delegate];
 #if !__has_feature(objc_arc)
 	[connection autorelease];
 #endif
-	
+
 	return connection;
 }// end - (NSURLConnection *) httpDataAsync:(NSURL *)url delegate:(id)target
 
