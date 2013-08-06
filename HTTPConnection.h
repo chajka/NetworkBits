@@ -12,6 +12,12 @@
 @end
 #endif
 
+typedef NSUInteger HTTPMethod;
+enum HTTPMethod {
+	HTTPMethodGET,
+	HTTPMethodPOST
+};
+
 @interface HTTPConnection : NSObject {
 @protected
 	NSURL						*URL;
@@ -154,10 +160,11 @@
 /*!
 	@method connectionForDelegate:
 	@abstract return NSURLConnection object for async data transfer.
+	@param HTTPMethod HTTPMethodGET is GET, HTTPMethodPOST is POST
 	@param delegate object for data recieve. if nil, it dosen’t work.
 	@result NSURLConnection object of this connection;
- */
-- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate;
+*/
+- (NSURLConnection *) connectionBy:(HTTPMethod)method delegate:(id<NSURLConnectionDelegate>)delegate;
 
 	// for HTTP connection method literal
 #define RequestMethodPost	@"POST"
