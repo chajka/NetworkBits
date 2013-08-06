@@ -352,7 +352,7 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 	return data;
 }// end - (NSData *) dataByPost:(NSError **)error
 
-- (NSURLConnection *) connectionForDelegate:(id<NSURLConnectionDelegate>)delegate method:(HTTPMethod)method
+- (NSURLConnection *) connectionBy:(HTTPMethod)method delegate:(id<NSURLConnectionDelegate>)delegate
 {
 	if (delegate == nil)
 		return nil;
