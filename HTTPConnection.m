@@ -310,8 +310,8 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 #endif
 {
 	NSData *receivedData = [self post:error];
-	if (error != nil)
-		return nil;
+		//	if (error != nil)
+		//		return nil;
 		// create detamine encoding constant array 
 	NSArray *encodings = [NSArray arrayWithObjects:
 						  [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],
