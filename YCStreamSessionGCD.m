@@ -71,7 +71,9 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 - (void) dealloc
 {
+#if !__has_feature(objc_arc)
 	dispatch_release(sessionQueue);
+#endif
 	if (readStream != NULL)		[self closeReadStream];
 	if (writeStream != NULL)	[self closeWriteStream];
 	if (reachabilityHostRef != NULL)		CFRelease(reachabilityHostRef);

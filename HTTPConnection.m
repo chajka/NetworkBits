@@ -16,7 +16,7 @@
 #define HeaderFieldReferer		@"Referer"
 
 static const NSTimeInterval defaultTimeout = 30; // second
-static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMemoryOnly;
+static const NSURLRequestCachePolicy defaultCachePolicy = NSURLRequestUseProtocolCachePolicy;
 
 #pragma mark private methods
 @interface HTTPConnection ()
