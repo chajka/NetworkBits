@@ -183,9 +183,9 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLRequestUseProtoco
 	self = [super init];
 	if (self)
 	{
-		URL = [url copy];
+		URL = [[NSURL alloc] initWithString:[url absoluteString]];
 		path = nil;
-		params = [param copy];
+		params = [[NSMutableDictionary alloc] initWithDictionary:param];
 		response = nil;
 		timeout = defaultTimeout;
 		cachePolicy = defaultCachePolicy;
