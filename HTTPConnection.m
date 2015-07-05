@@ -166,7 +166,7 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLRequestUseProtoco
 	{
 		URL = nil;
 		path = nil;
-		params = nil;
+		params = [[NSMutableDictionary alloc] init];
 		response = nil;
 		timeout = defaultTimeout;
 		cachePolicy = defaultCachePolicy;
