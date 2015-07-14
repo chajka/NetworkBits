@@ -1,5 +1,5 @@
 //
-//  YCStreamSession.m
+//  YCStreamSessionGCD.m
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
@@ -13,7 +13,7 @@
 typedef	uint32_t	SCNetworkReachabilityFlags;
 #endif
 
-@interface YCStreamSession ()
+@interface YCStreamSessionGCD ()
 - (void) initializeMembers:(NSString *)host port:(int)port;
 - (BOOL) initializeHost;
 
@@ -43,7 +43,7 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 #endif
 @end
 
-@implementation YCStreamSession
+@implementation YCStreamSessionGCD
 @synthesize	hostName;
 @synthesize	portNumber;
 @synthesize reachabilityValidating;
@@ -67,25 +67,6 @@ static void NetworkReachabilityCallBack(SCNetworkReachabilityRef target, SCNetwo
 
 	return self;
 }// end - (id) initWithhostName:(NSString *)server andPort:(NSUInteger)port
-
-- (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
-{
-	self = [super init];
-	if (self)
-	{
-		[self initializeMembers:host port:port];
-		if ([self initializeHost] == NO)
-			return nil;
-		// end if initialize host is fail
-
-		targetThread = thread;
-#if !__has_feature(objc_arc)
-		[targetThread retain];
-#endif
-	}// end if self can allocate
-	
-	return self;
-}// end - (id) initWithServerName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread
 
 - (void) dealloc
 {

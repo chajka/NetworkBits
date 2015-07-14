@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <SystemConfiguration/SystemConfiguration.h>
+#import <dispatch/dispatch.h>
 
 #define ReadStreamError				@"ReadStreamError"
 #define WriteStreamError			@"WriteStreamError"
@@ -51,6 +52,9 @@ enum YCStreamDirection {
 };
 
 @interface YCStreamSession : NSObject <YCStreamSessionDelegate> {
+		// GCD threading
+	dispatch_queue_t							asyncQueue;
+	dispatch_queue_t							syncQueue;
 		// connection specific variables
 	NSString									*hostName;
 	int											portNumber;
@@ -91,7 +95,6 @@ enum YCStreamDirection {
 @property (assign, readwrite) NSTimeInterval	timeout;
 
 - (id) initWithHostName:(NSString *)host andPort:(int)port;
-- (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread;
 
 	// connection
 - (void) checkReadyToConnect;

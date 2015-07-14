@@ -1,5 +1,5 @@
 //
-//  YCStreamSession.h
+//  YCStreamSessionGCD.h
 //  Network bits
 //
 //  Created by Чайка on 7/7/12.
@@ -17,11 +17,11 @@
 #define keySelf						@"keySelf"
 #define keyDelegate					@"keyDelegate"
 
-@class YCStreamSession;
+@class YCStreamSessionGCD;
 @protocol YCStreamSessionDelegate <NSObject>
 @required
 	// process common event
-- (void) streamReadyToConnect:(YCStreamSession *)session reachable:(BOOL)reachable;
+- (void) streamReadyToConnect:(YCStreamSessionGCD *)session reachable:(BOOL)reachable;
 	// process input stream
 - (void) readStreamHasBytesAvailable:(NSInputStream *)stream;
 - (void) readStreamEndEncounted:(NSInputStream *)stream;
@@ -30,7 +30,7 @@
 - (void) writeStreamEndEncounted:(NSOutputStream *)stream;
 @optional
 	// process common event
-- (void) streamIsDisconnected:(YCStreamSession *)session stream:(NSStream *)stream;
+- (void) streamIsDisconnected:(YCStreamSessionGCD *)session stream:(NSStream *)stream;
 	// process for input stream
 - (void) readStreamErrorOccured:(NSInputStream *)stream;
 - (void) readStreamOpenCompleted:(NSInputStream *)stream;
@@ -50,7 +50,7 @@ enum YCStreamDirection {
 	YCStreamDirectionBoth = YCStreamDirectionReadable | YCStreamDirectionWriteable
 };
 
-@interface YCStreamSession : NSObject <YCStreamSessionDelegate> {
+@interface YCStreamSessionGCD : NSObject <YCStreamSessionDelegate> {
 		// connection specific variables
 	NSString									*hostName;
 	int											portNumber;
@@ -91,7 +91,6 @@ enum YCStreamDirection {
 @property (assign, readwrite) NSTimeInterval	timeout;
 
 - (id) initWithHostName:(NSString *)host andPort:(int)port;
-- (id) initWithHostName:(NSString *)host andPort:(int)port onThread:(NSThread *)thread;
 
 	// connection
 - (void) checkReadyToConnect;
