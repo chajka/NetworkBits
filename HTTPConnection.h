@@ -12,11 +12,10 @@
 @end
 #endif
 
-typedef NSUInteger HTTPMethod;
-enum HTTPMethod {
+typedef enum {
 	HTTPMethodGET,
 	HTTPMethodPOST
-};
+} HTTPMethod ;
 
 @interface HTTPConnection : NSObject {
 @protected

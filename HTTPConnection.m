@@ -16,7 +16,7 @@
 #define HeaderFieldReferer		@"Referer"
 
 static const NSTimeInterval defaultTimeout = 30; // second
-static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllowedInMemoryOnly;
+static const NSURLRequestCachePolicy defaultCachePolicy = NSURLRequestUseProtocolCachePolicy;
 
 #pragma mark private methods
 @interface HTTPConnection ()
@@ -166,7 +166,7 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 	{
 		URL = nil;
 		path = nil;
-		params = nil;
+		params = [[NSMutableDictionary alloc] init];
 		response = nil;
 		timeout = defaultTimeout;
 		cachePolicy = defaultCachePolicy;
@@ -183,9 +183,9 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 	self = [super init];
 	if (self)
 	{
-		URL = [url copy];
+		URL = [[NSURL alloc] initWithString:[url absoluteString]];
 		path = nil;
-		params = [param copy];
+		params = [[NSMutableDictionary alloc] initWithDictionary:param];
 		response = nil;
 		timeout = defaultTimeout;
 		cachePolicy = defaultCachePolicy;
@@ -310,8 +310,8 @@ static const NSURLRequestCachePolicy defaultCachePolicy = NSURLCacheStorageAllow
 #endif
 {
 	NSData *receivedData = [self post:error];
-	if (error != nil)
-		return nil;
+		//	if (error != nil)
+		//		return nil;
 		// create detamine encoding constant array 
 	NSArray *encodings = [NSArray arrayWithObjects:
 						  [NSNumber numberWithUnsignedInt:NSUTF8StringEncoding],
